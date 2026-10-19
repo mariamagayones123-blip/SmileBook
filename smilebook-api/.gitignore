@@ -1,24 +1,39 @@
-*.log
-.DS_Store
+# Environment & Secrets (Safeguards credentials across all subfolders)
 .env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+.env.*
+!.env.example
+
+# Frontend Dependencies & Builds
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Laravel Backend Dependencies & Storage
+smilebook-api/vendor/
+smilebook-api/storage/*.key
+smilebook-api/storage/pail
+smilebook-api/Homestead.json
+smilebook-api/Homestead.yaml
+smilebook-api/auth.json
+smilebook-api/.env
+
+# General Dependencies & Build Files
 /node_modules
+/vendor
+/dist
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
-/storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
+
+# IDE & Editor Files
+.vscode/
+.idea/
+.fleet/
+.nova/
+.zed/
+.DS_Store
 Thumbs.db
+*.log
+.phpactor.json
+.phpunit.result.cache
+/.phpunit.cache
