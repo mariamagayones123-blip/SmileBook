@@ -7,6 +7,12 @@ import PageHeader from '../PageHeader'
 import Icon from '../Icons'
 import doctorPhoto from '../doctorPhotos'
 
+// Today's date as YYYY-MM-DD in the browser's local time (not UTC, so it flips at local midnight).
+const todayYmd = () => {
+  const n = new Date()
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
+}
+
 const fmtDate = (ymd) => {
   const [y, m, d] = ymd.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -126,7 +132,7 @@ function Appointments() {
       {err && <p className="error">{err}</p>}
       <div className="toolbar">
         <div className="chips" role="group" aria-label="Filter by status">
-          {['all', 'pending', 'approved', 'cancelled'].map((k) => (
+          {['all', 'pending', 'approved', 'done', 'cancelled'].map((k) => (
             <button key={k} type="button" className={'chip' + (filter === k ? ' on' : '')} onClick={() => setFilter(k)}>
               {k}<span>{counts[k] || 0}</span>
             </button>
@@ -161,7 +167,18 @@ function Appointments() {
                     {a.status === 'pending' && <button className="btn small" disabled={actionBusyId !== null} onClick={() => setStatus(a.id, 'approved')}>
                       {actionBusyId === a.id ? 'Saving...' : 'Approve'}
                     </button>}
-                    {a.status !== 'cancelled' && <>
+                    {a.status === 'approved' && (() => {
+                      // "Done" only works on the day of the appointment (or later, if it was never marked).
+                      const notYet = a.date > todayYmd()
+                      return (
+                        <button className="btn small" disabled={actionBusyId !== null || notYet}
+                          title={notYet ? `Available on the appointment day (${fmtDate(a.date)})` : undefined}
+                          onClick={() => setStatus(a.id, 'done')}>
+                          {actionBusyId === a.id ? 'Saving...' : 'Done'}
+                        </button>
+                      )
+                    })()}
+                    {a.status !== 'cancelled' && a.status !== 'done' && <>
                       <button className="btn small ghost" disabled={actionBusyId !== null} onClick={() => { setEditing(a); setDate(''); setTime('') }}>Reschedule</button>
                       <button className="btn small danger-soft" disabled={actionBusyId !== null} onClick={() => setStatus(a.id, 'cancelled')}>
                         {actionBusyId === a.id ? 'Saving...' : 'Cancel'}

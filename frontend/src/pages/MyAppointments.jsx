@@ -50,8 +50,8 @@ export default function MyAppointments() {
   }
 
   const today = toYMD(new Date())
-  const upcoming = list.filter((a) => a.date >= today && a.status !== 'cancelled')
-  const completed = list.filter((a) => a.date < today && a.status !== 'cancelled')
+  const upcoming = list.filter((a) => a.date >= today && a.status !== 'cancelled' && a.status !== 'done')
+  const completed = list.filter((a) => (a.date < today || a.status === 'done') && a.status !== 'cancelled')
   const cancelled = list.filter((a) => a.status === 'cancelled')
 
   const Row = ({ a, actions }) => (

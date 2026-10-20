@@ -209,7 +209,12 @@ a:hover { color: var(--color-primary-hover); }
 .auth-steps { display: flex; gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; }
 .auth-steps li { flex: 1; padding-top: 8px; border-top: 4px solid var(--color-border-light); color: var(--color-muted); font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .auth-steps li.active { border-top-color: var(--color-primary); color: var(--color-primary-dark); }
-.otp-input { text-align: center; font-size: 1.5rem; font-weight: 700; letter-spacing: .5em; padding-left: calc(13px + .5em); }
+.otp-field { margin: 14px 0; }
+.otp-label { display: block; color: var(--color-primary-dark); font-size: .9rem; font-weight: 600; }
+.otp-group { display: flex; gap: 10px; margin-top: 8px; }
+.otp-box { flex: 1 1 0; min-width: 0; max-width: 56px; height: 58px; min-height: 0; margin-top: 0; padding: 0; text-align: center; font-size: 1.5rem; font-weight: 700; line-height: 1; border-radius: 12px; caret-color: var(--color-primary); }
+.otp-box.filled:not(:disabled) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+@media (max-width: 380px) { .otp-group { gap: 6px; } .otp-box { height: 52px; font-size: 1.3rem; } }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 20px; }
 .avatar { font-size: 2.4rem; }
 
@@ -379,6 +384,7 @@ input[aria-invalid="true"] { border-color: var(--color-error); }
 }
 .badge.pending { border-color: #f1d58f; background: var(--color-warning-bg); color: var(--color-warning); }
 .badge.approved { border-color: #b9dfcb; background: #e7f5ed; color: #165d3f; }
+.badge.done { border-color: #c9d8f0; background: #e8f0fb; color: #25497a; }
 .badge.cancelled { border-color: #dce3e2; background: #f0f3f2; color: #566665; }
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }

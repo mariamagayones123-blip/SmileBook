@@ -7,12 +7,66 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private const MAX_LOGIN_ATTEMPTS = 5;   // wrong passwords per email+IP before a 1-minute lockout
+    private const MAX_OTP_ATTEMPTS = 5;     // wrong codes allowed per reset code
+
+    /** Same password rules for sign-up and password reset. */
+    private function passwordRules(): array
+    {
+        return [
+            'required', 'string', 'min:6', 'confirmed',
+            'regex:/[A-Z]/',          // uppercase letter
+            'regex:/[a-z]/',          // lowercase letter
+            'regex:/[0-9]/',          // number
+            'regex:/[^A-Za-z0-9\s]/', // special character
+        ];
+    }
+
+    private function passwordMessages(): array
+    {
+        return [
+            'password.min'   => 'Password must be at least 6 characters long.',
+            'password.regex' => 'Password must include an uppercase letter, a lowercase letter, a number, and a special character.',
+            'password.confirmed' => 'Passwords do not match.',
+        ];
+    }
+
+    /** Forgot password only accepts a complete Gmail address (name@gmail.com). */
+    private function gmailRule(): string
+    {
+        return 'regex:/^[A-Za-z0-9._%+\-]+@gmail\.com$/i';
+    }
+
+    private function gmailMessages(): array
+    {
+        return [
+            'email.email' => 'Please enter a complete Gmail address, like yourname@gmail.com.',
+            'email.regex' => 'Please enter a complete Gmail address, like yourname@gmail.com.',
+        ];
+    }
+
+    /** Emails are stored and compared in lowercase, so Juan@Gmail.com and juan@gmail.com are the same account. */
+    private function cleanEmail(Request $r): void
+    {
+        if (is_string($r->input('email'))) {
+            $r->merge(['email' => strtolower(trim($r->input('email')))]);
+        }
+    }
+
+    /** Case-insensitive lookup, so older accounts saved with capital letters are still found. */
+    private function findUserByEmail(string $email): ?User
+    {
+        return User::whereRaw('LOWER(email) = ?', [strtolower($email)])->first();
+    }
+
     public function register(Request $r)
     {
+        $this->cleanEmail($r);
         $data = $r->validate([
             'name'     => [
                 'required', 'string', 'max:100',
@@ -25,22 +79,13 @@ class AuthController extends Controller
                     }
                 },
             ],
-            'email'    => 'required|email|unique:users',
+            'email'    => ['required', 'email', $this->gmailRule(), 'unique:users'],
             'phone'    => ['required', 'regex:/^(09|\+639)\d{9}$/'],
-            'password' => [
-                'required', 'string', 'min:6', 'confirmed',
-                'regex:/[A-Z]/',          // uppercase letter
-                'regex:/[a-z]/',          // lowercase letter
-                'regex:/[0-9]/',          // number
-                'regex:/[^A-Za-z0-9\s]/', // special character
-            ],
+            'password' => $this->passwordRules(),
         ], [
             'phone.required' => 'Please enter a valid mobile number.',
             'phone.regex'    => 'Please enter a valid mobile number.',
-            'password.min'   => 'Password must be at least 6 characters long.',
-            'password.regex' => 'Password must include an uppercase letter, a lowercase letter, a number, and a special character.',
-            'password.confirmed' => 'Passwords do not match.',
-        ]);
+        ] + $this->passwordMessages() + $this->gmailMessages());
 
         $user = User::create($data + ['role' => 'patient']);
         return ['token' => $user->createToken('smilebook')->plainTextToken, 'user' => $user];
@@ -48,11 +93,22 @@ class AuthController extends Controller
 
     public function login(Request $r)
     {
+        $this->cleanEmail($r);
         $r->validate(['email' => 'required|email', 'password' => 'required']);
-        $user = User::where('email', $r->email)->first();
+
+        // Slow down password guessing: max 5 wrong tries per email+IP, then wait a minute.
+        $key = 'login:' . strtolower($r->email) . '|' . $r->ip();
+        if (RateLimiter::tooManyAttempts($key, self::MAX_LOGIN_ATTEMPTS)) {
+            $secs = RateLimiter::availableIn($key);
+            throw ValidationException::withMessages(['email' => "Too many login attempts. Please try again in $secs seconds."]);
+        }
+
+        $user = $this->findUserByEmail($r->email);
         if (!$user || !Hash::check($r->password, $user->password)) {
+            RateLimiter::hit($key, 60);
             throw ValidationException::withMessages(['email' => 'Wrong email or password.']);
         }
+        RateLimiter::clear($key);
         return ['token' => $user->createToken('smilebook')->plainTextToken, 'user' => $user];
     }
 
@@ -66,8 +122,12 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $r)
     {
-        $data = $r->validate(['email' => 'required|email']);
-        $user = User::where('email', $data['email'])->first();
+        $this->cleanEmail($r);
+        $data = $r->validate(
+            ['email' => ['required', 'email', $this->gmailRule()]],
+            $this->gmailMessages()
+        );
+        $user = $this->findUserByEmail($data['email']);
         $message = 'If that email is registered, we sent a 6-digit code to it. Check your Gmail inbox.';
 
         if (!$user) {
@@ -97,24 +157,33 @@ class AuthController extends Controller
 
     public function resetPassword(Request $r)
     {
+        $this->cleanEmail($r);
         $data = $r->validate([
-            'email' => 'required|email',
+            'email' => ['required', 'email', $this->gmailRule()],
             'otp' => 'required|digits:6',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+            'password' => $this->passwordRules(),
+        ], $this->passwordMessages() + $this->gmailMessages());
 
-        $reset = PasswordResetOtp::where('email', $data['email'])
-            ->whereNull('used_at')
-            ->latest()
-            ->first();
+        $user = $this->findUserByEmail($data['email']);
+        $reset = $user
+            ? PasswordResetOtp::where('email', $user->email)->whereNull('used_at')->latest()->first()
+            : null;
 
-        if (!$reset || $reset->expires_at->isPast() || !Hash::check($data['otp'], $reset->otp_hash)) {
+        if (!$reset || $reset->expires_at->isPast()) {
             throw ValidationException::withMessages(['otp' => 'That code is invalid or has expired.']);
         }
 
-        $user = User::where('email', $data['email'])->first();
-        if (!$user) {
-            throw ValidationException::withMessages(['email' => 'No account was found for that email.']);
+        // Each code allows only a few wrong guesses; after that the user must request a new one.
+        if ($reset->attempts >= self::MAX_OTP_ATTEMPTS) {
+            throw ValidationException::withMessages(['otp' => 'Too many wrong attempts. Please request a new code.']);
+        }
+
+        if (!Hash::check($data['otp'], $reset->otp_hash)) {
+            $reset->increment('attempts');
+            $left = self::MAX_OTP_ATTEMPTS - $reset->attempts;
+            throw ValidationException::withMessages(['otp' => $left > 0
+                ? "That code is invalid or has expired. $left attempt(s) left."
+                : 'Too many wrong attempts. Please request a new code.']);
         }
 
         $user->update(['password' => $data['password']]);

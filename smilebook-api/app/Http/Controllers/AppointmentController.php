@@ -2,13 +2,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Jobs\SendAppointmentNotification;
 use App\Models\Dentist;
-use App\Services\SmsService;
 use Carbon\Carbon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentController extends Controller
@@ -50,20 +49,25 @@ class AppointmentController extends Controller
         $this->checkDate($data['date']);
         $slot = $this->findSlot($data['dentist_id'], $data['date'], $data['start_time']);
 
-        $appt = DB::transaction(function () use ($r, $data, $slot) {
-            $this->assertFree($data['dentist_id'], $data['date'], $data['start_time']);
-            return Appointment::create([
-                'user_id'      => $r->user()->id,
-                'dentist_id'   => $data['dentist_id'],
-                'service_id'   => $data['service_id'],
-                'date'         => $data['date'],
-                'start_time'   => $slot['start'],
-                'end_time'     => $slot['end'],
-                'status'       => 'pending',
-                'down_payment' => self::DOWN_PAYMENT,
-                'payment_ref'  => $data['payment_ref'],
-            ]);
-        });
+        try {
+            $appt = DB::transaction(function () use ($r, $data, $slot) {
+                $this->assertFree($data['dentist_id'], $data['date'], $data['start_time']);
+                return Appointment::create([
+                    'user_id'      => $r->user()->id,
+                    'dentist_id'   => $data['dentist_id'],
+                    'service_id'   => $data['service_id'],
+                    'date'         => $data['date'],
+                    'start_time'   => $slot['start'],
+                    'end_time'     => $slot['end'],
+                    'status'       => 'pending',
+                    'down_payment' => self::DOWN_PAYMENT,
+                    'payment_ref'  => $data['payment_ref'],
+                ]);
+            });
+        } catch (UniqueConstraintViolationException) {
+            // Two people booked the same slot at the same moment; the database let only one through.
+            throw $this->slotTakenError();
+        }
 
         $this->notify($appt, 'booked (pending approval)');
         return response()->json($appt->load(['dentist', 'service']), 201);
@@ -74,19 +78,24 @@ class AppointmentController extends Controller
     {
         $this->authorizeAppt($r, $appointment);
         abort_if($appointment->status === 'cancelled', 422, 'This appointment is already cancelled.');
+        abort_if($appointment->status === 'done', 422, 'This appointment is already done.');
 
         $data = $r->validate(['date' => 'required|date_format:Y-m-d', 'start_time' => 'required|date_format:H:i']);
         $this->assertDentistOffersService($appointment->dentist_id, $appointment->service_id);
         $this->checkDate($data['date']);
         $slot = $this->findSlot($appointment->dentist_id, $data['date'], $data['start_time']);
 
-        DB::transaction(function () use ($appointment, $data, $slot, $r) {
-            $this->assertFree($appointment->dentist_id, $data['date'], $data['start_time'], $appointment->id);
-            $appointment->update([
-                'date' => $data['date'], 'start_time' => $slot['start'], 'end_time' => $slot['end'],
-                'status' => $r->user()->role === 'admin' ? $appointment->status : 'pending',
-            ]);
-        });
+        try {
+            DB::transaction(function () use ($appointment, $data, $slot, $r) {
+                $this->assertFree($appointment->dentist_id, $data['date'], $data['start_time'], $appointment->id);
+                $appointment->update([
+                    'date' => $data['date'], 'start_time' => $slot['start'], 'end_time' => $slot['end'],
+                    'status' => $r->user()->role === 'admin' ? $appointment->status : 'pending',
+                ]);
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw $this->slotTakenError();
+        }
 
         $this->notify($appointment, 'rescheduled');
         return $appointment->load(['dentist', 'service']);
@@ -95,16 +104,40 @@ class AppointmentController extends Controller
     public function cancel(Request $r, Appointment $appointment)
     {
         $this->authorizeAppt($r, $appointment);
+        abort_if($appointment->status === 'done', 422, 'This appointment is already done.');
         $appointment->update(['status' => 'cancelled']);
         $this->notify($appointment, 'cancelled');
         return $appointment;
     }
 
-    /** Admin: approve or cancel. */
+    /** Admin: approve, cancel, or mark as done. */
     public function setStatus(Request $r, Appointment $appointment)
     {
-        $r->validate(['status' => 'required|in:approved,cancelled']);
-        $appointment->update(['status' => $r->status]);
+        $r->validate(['status' => 'required|in:approved,cancelled,done']);
+        if ($r->status === 'done') {
+            // only an approved appointment can be marked as done
+            abort_unless($appointment->status === 'approved', 422, 'Only approved appointments can be marked as done.');
+            // ...and only on the day of the appointment (or after, if it was never marked). Uses APP_TIMEZONE.
+            abort_if($appointment->date->toDateString() > Carbon::today()->toDateString(), 422,
+                'This appointment can only be marked as done on the day of the appointment.');
+            $appointment->update(['status' => 'done']);
+            return $appointment->load(['dentist', 'service', 'user']);
+        }
+        abort_if($appointment->status === 'done', 422, 'This appointment is already done.');
+
+        if ($appointment->status === 'cancelled' && $r->status !== 'cancelled') {
+            // Bringing a cancelled appointment back: its slot may have been booked by someone else meanwhile.
+            try {
+                DB::transaction(function () use ($appointment, $r) {
+                    $this->assertFree($appointment->dentist_id, $appointment->date->toDateString(), $appointment->start_time, $appointment->id);
+                    $appointment->update(['status' => $r->status]);
+                });
+            } catch (UniqueConstraintViolationException) {
+                throw $this->slotTakenError();
+            }
+        } else {
+            $appointment->update(['status' => $r->status]);
+        }
         $this->notify($appointment, $r->status === 'approved' ? 'approved' : 'cancelled');
         return $appointment->load(['dentist', 'service', 'user']);
     }
@@ -167,8 +200,13 @@ class AppointmentController extends Controller
             ->when($exclude, fn ($q) => $q->where('id', '!=', $exclude))
             ->lockForUpdate()->exists();
         if ($taken) {
-            throw ValidationException::withMessages(['start_time' => 'Sorry, that slot was just taken. Pick another one.']);
+            throw $this->slotTakenError();
         }
+    }
+
+    private function slotTakenError(): ValidationException
+    {
+        return ValidationException::withMessages(['start_time' => 'Sorry, that slot was just taken. Pick another one.']);
     }
 
     private function authorizeAppt(Request $r, Appointment $a): void
@@ -176,17 +214,9 @@ class AppointmentController extends Controller
         abort_unless($r->user()->role === 'admin' || $a->user_id === $r->user()->id, 403, 'Not your appointment.');
     }
 
-    /** Email + SMS confirmation. */
+    /** Email + SMS confirmation. Sent after the response, so the patient never waits for Gmail/Semaphore. */
     private function notify(Appointment $a, string $event): void
     {
-        $a->loadMissing(['user', 'dentist', 'service']);
-        $msg = "SmileBook: Hi {$a->user->name}, your {$a->service->name} with {$a->dentist->name} on "
-             . $a->date->format('M d, Y') . " at {$a->start_time} is $event. Ref #{$a->id}.";
-        try {
-            Mail::raw($msg, fn ($m) => $m->to($a->user->email)->subject('SmileBook Appointment Update'));
-        } catch (\Throwable $e) {
-            Log::warning('Mail failed: ' . $e->getMessage());
-        }
-        SmsService::send($a->user->phone, $msg);
+        SendAppointmentNotification::dispatchAfterResponse($a->id, $event);
     }
 }

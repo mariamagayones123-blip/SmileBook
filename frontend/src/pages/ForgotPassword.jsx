@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api, { errMsg } from '../api'
 import { useToast } from '../Toast'
-import { AuthShell, PasswordInput } from './Auth'
+import OtpInput from '../OtpInput'
+import { AuthShell, PasswordInput, PasswordChecklist, PASSWORD_RULES } from './Auth'
+
+// Only a complete Gmail address is allowed (example: juan@gmail.com)
+const GMAIL_RE = /^[A-Za-z0-9._%+-]+@gmail\.com$/i
 
 export default function ForgotPassword() {
   const nav = useNavigate()
@@ -12,6 +16,7 @@ export default function ForgotPassword() {
   const [otp, setOtp] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [pwTouched, setPwTouched] = useState(false)
   const [err, setErr] = useState('')
   const [info, setInfo] = useState('')
   const [busy, setBusy] = useState(false)
@@ -19,9 +24,14 @@ export default function ForgotPassword() {
   const requestCode = async (e) => {
     e.preventDefault()
     setErr('')
+    const cleanEmail = email.trim()
+    if (!GMAIL_RE.test(cleanEmail)) {
+      setErr('Please enter a complete Gmail address, like yourname@gmail.com.')
+      return
+    }
     setBusy(true)
     try {
-      const { data } = await api.post('/forgot-password', { email })
+      const { data } = await api.post('/forgot-password', { email: cleanEmail })
       setInfo(data.message)
       setStep('reset')
     } catch (x) {
@@ -32,6 +42,14 @@ export default function ForgotPassword() {
 
   const resetPassword = async (e) => {
     e.preventDefault()
+    if (otp.length !== 6) {
+      setErr('Please enter the 6-digit code we sent to your email.')
+      return
+    }
+    if (!PASSWORD_RULES.every((r) => r.test(password))) {
+      setErr('Password must include an uppercase letter, a lowercase letter, a number, and a special character.')
+      return
+    }
     if (password !== passwordConfirmation) {
       setErr('Passwords do not match.')
       return
@@ -40,7 +58,7 @@ export default function ForgotPassword() {
     setBusy(true)
     try {
       const { data } = await api.post('/reset-password', {
-        email,
+        email: email.trim(),
         otp,
         password,
         password_confirmation: passwordConfirmation,
@@ -71,33 +89,26 @@ export default function ForgotPassword() {
         {info && <p className="auth-info" role="status">{info}</p>}
         {step === 'email' ? (
           <label>Email address
-            <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@gmail.com" required />
+            <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@gmail.com" required />
           </label>
         ) : (
           <>
-            <label>6-digit code
-              <input
-                className="otp-input"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                required
-                minLength={6}
-                maxLength={6}
-              />
-            </label>
+            <div className="otp-field">
+              <span className="otp-label" id="otp-label">6-digit code</span>
+              <OtpInput value={otp} onChange={setOtp} autoFocus disabled={busy} />
+            </div>
             <label>New password
               <PasswordInput
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => setPwTouched(true)}
                 placeholder="Create a new password (min. 6 characters)"
+                describedBy="password-hint"
                 required
-                minLength={6}
               />
             </label>
+            <PasswordChecklist id="password-hint" value={password} touched={pwTouched} />
             <label>Confirm new password
               <PasswordInput
                 autoComplete="new-password"
@@ -105,7 +116,6 @@ export default function ForgotPassword() {
                 onChange={(e) => setPasswordConfirmation(e.target.value)}
                 placeholder="Re-enter your password"
                 required
-                minLength={6}
               />
             </label>
           </>

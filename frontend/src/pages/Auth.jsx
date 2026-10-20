@@ -94,13 +94,37 @@ export function AuthShell({ children }) {
 }
 
 // Password rules shown as a live checklist on the sign-up page.
-const PASSWORD_RULES = [
+export const PASSWORD_RULES = [
   { id: 'len', label: 'At least 6 characters', test: (v) => v.length >= 6 },
   { id: 'upper', label: 'Uppercase letter (A–Z)', test: (v) => /[A-Z]/.test(v) },
   { id: 'lower', label: 'Lowercase letter (a–z)', test: (v) => /[a-z]/.test(v) },
   { id: 'number', label: 'Number (0–9)', test: (v) => /[0-9]/.test(v) },
   { id: 'special', label: 'Special character (@ # !)', test: (v) => /[^A-Za-z0-9\s]/.test(v) },
 ]
+
+// Live checklist of the password rules. Used on sign-up and on the forgot-password page.
+export function PasswordChecklist({ id = 'password-hint', value, touched = false }) {
+  return (
+    <ul id={id} className="pw-rules" aria-live="polite">
+      {PASSWORD_RULES.map((r) => {
+        const ok = r.test(value)
+        return (
+          <li key={r.id} className={'pw-rule' + (ok ? ' met' : touched ? ' bad' : '')}>
+            <span className="rule-icon" aria-hidden="true">
+              {ok
+                ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="7" /></svg>}
+            </span>
+            <span className="rule-text">{r.label}<span className="sr-only">{ok ? ' (done)' : ' (not yet)'}</span></span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+// Sign-up needs a complete Gmail address (example: juan@gmail.com)
+const GMAIL_RE = /^[A-Za-z0-9._%+-]+@gmail\.com$/i
 
 export default function Auth({ mode }) {
   const { login } = useAuth()
@@ -189,9 +213,11 @@ export default function Auth({ mode }) {
         password: validators.password(f.password),
         confirm: checkConfirm(f.password_confirmation, f.password),
       }
+      const emailErr = GMAIL_RE.test(f.email.trim()) ? '' : 'Please use a complete Gmail address, like yourname@gmail.com.'
       setFieldErr(next)
+      setErr(emailErr)
       setTouched({ name: true, phone: true, password: true, confirm: true })
-      if (Object.values(next).some(Boolean)) {
+      if (Object.values(next).some(Boolean) || emailErr) {
         // focus the first invalid field once React has re-rendered
         setTimeout(() => document.querySelector('.auth-card [aria-invalid="true"]')?.focus(), 0)
         return
@@ -199,7 +225,7 @@ export default function Auth({ mode }) {
     }
     setErr(''); setBusy(true)
     try {
-      const { data } = await api.post(isReg ? '/register' : '/login', f)
+      const { data } = await api.post(isReg ? '/register' : '/login', { ...f, email: f.email.trim().toLowerCase() })
       login(data)
     } catch (x) {
       // The server validates too: show its messages next to the matching fields.
@@ -263,7 +289,7 @@ export default function Auth({ mode }) {
             <FieldError id="phone-error" message={fieldErr.phone} />
           </label>
         </>)}
-        <label>Email address<input type="email" autoComplete="email" value={f.email} onChange={set('email')} placeholder="you@example.com" required /></label>
+        <label>Email address<input type="email" autoComplete="email" value={f.email} onChange={set('email')} placeholder={isReg ? 'you@gmail.com' : 'you@example.com'} required /></label>
         <label>Password
           <PasswordInput
             autoComplete={isReg ? 'new-password' : 'current-password'}
@@ -277,23 +303,7 @@ export default function Auth({ mode }) {
           />
           {isReg && <FieldError id="password-error" message={fieldErr.password} />}
         </label>
-        {isReg && (
-          <ul id="password-hint" className="pw-rules" aria-live="polite">
-            {PASSWORD_RULES.map((r) => {
-              const ok = r.test(f.password)
-              return (
-                <li key={r.id} className={'pw-rule' + (ok ? ' met' : touched.password ? ' bad' : '')}>
-                  <span className="rule-icon" aria-hidden="true">
-                    {ok
-                      ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-                      : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="7" /></svg>}
-                  </span>
-                  <span className="rule-text">{r.label}<span className="sr-only">{ok ? ' (done)' : ' (not yet)'}</span></span>
-                </li>
-              )
-            })}
-          </ul>
-        )}
+        {isReg && <PasswordChecklist id="password-hint" value={f.password} touched={touched.password} />}
         {isReg && (
           <label>Confirm password
             <PasswordInput
