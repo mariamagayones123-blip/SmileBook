@@ -35,13 +35,21 @@ class SmsService
             return true;
         }
 
+        $payload = [
+            'apikey'  => $key,
+            'number'  => $to,
+            'message' => $message,
+        ];
+
+        // Only send a sender name if one is set. An unapproved/invalid name makes
+        // Semaphore reject the message ("The senderName supplied is not valid").
+        $sender = trim((string) config('services.semaphore.sender'));
+        if ($sender !== '') {
+            $payload['sendername'] = $sender;
+        }
+
         try {
-            $res = Http::asForm()->timeout(10)->post(self::ENDPOINT, [
-                'apikey'     => $key,
-                'number'     => $to,
-                'message'    => $message,
-                'sendername' => config('services.semaphore.sender'),
-            ]);
+            $res = Http::asForm()->timeout(10)->post(self::ENDPOINT, $payload);
         } catch (Throwable $e) {
             Log::warning("SMS to $to failed (could not reach Semaphore): " . $e->getMessage());
             return false;

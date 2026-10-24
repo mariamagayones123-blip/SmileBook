@@ -30,7 +30,9 @@ return [
 
     'semaphore' => [
         'key' => env('SMS_API_KEY'),
-        'sender' => env('SMS_SENDER', 'SEMAPHORE'),
+        // Leave empty to use your Semaphore account's default sender name.
+        // Only set SMS_SENDER in .env to a name that is approved in your Semaphore dashboard.
+        'sender' => env('SMS_SENDER', ''),
     ],
 
     'slack' => [
