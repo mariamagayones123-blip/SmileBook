@@ -3,12 +3,12 @@
 Dental clinic appointment system (React + Laravel).
 
 ## Folder layout
-- `smilebook-api/` = the Laravel backend (API)
+- `backend/` = the Laravel backend (API)
 - `frontend/` = the React (Vite) app
 
 ## 1. Backend (Laravel)
 ```bash
-cd smilebook-api
+cd backend
 composer install
 cp .env.example .env            # skip if you already have a .env
 php artisan key:generate
@@ -38,7 +38,7 @@ Demo accounts: admin@smilebook.test / admin123, patient@smilebook.test / patient
 
 ### Supabase database
 1. Make a project at supabase.com, then click **Connect** and copy the **Session pooler** details.
-2. Put them in `smilebook-api/.env` (see `.env.example`):
+2. Put them in `backend/.env` (see `.env.example`):
 ```
 DB_CONNECTION=pgsql
 DB_HOST=aws-0-<region>.pooler.supabase.com
@@ -67,14 +67,14 @@ npm run dev                     # http://localhost:5173
 
 ## Update notes (booking safety + notifications)
 
-- After pulling these changes, run `php artisan migrate` in `smilebook-api`. It adds a database rule so
+- After pulling these changes, run `php artisan migrate` in `backend`. It adds a database rule so
   the same dentist/date/time can't be booked twice (cancelled appointments don't count).
   If it refuses, two active appointments already share a slot; cancel one and run it again.
   (SQLite and PostgreSQL only. On MySQL/XAMPP the app-level check still applies.)
 - Email and SMS are now sent right after the response (`app/Jobs/SendAppointmentNotification.php`),
   so booking no longer waits for Gmail/Semaphore. No queue worker is needed.
 - SMS failures (bad API key, no credits, timeout) are now written to `storage/logs/laravel.log`.
-- Run the tests with `php artisan test` in `smilebook-api`.
+- Run the tests with `php artisan test` in `backend`.
 
 ## Update notes (security)
 
@@ -97,8 +97,8 @@ npm run dev                     # http://localhost:5173
 
 ## Which .env should I use?
 
-- Supabase (PostgreSQL): copy `smilebook-api/.env.example` to `.env` and fill in the Supabase details.
-- Local SQLite (simple demo): copy `smilebook-api/.env.sqlite.example` to `.env`, then run `php artisan migrate --seed`.
+- Supabase (PostgreSQL): copy `backend/.env.example` to `.env` and fill in the Supabase details.
+- Local SQLite (simple demo): copy `backend/.env.sqlite.example` to `.env`, then run `php artisan migrate --seed`.
 - Before sending or submitting the project, run `.\make-submission-zip.ps1` in PowerShell.
   It makes `SmileBook_clean.zip` without `.env`, `.env.backup`, the database file, `.git`, `vendor`, and `node_modules`.
 - Never put `.env` or `.env.backup` in a zip or on GitHub. If that already happened, make a new Gmail app password and a new Semaphore API key.

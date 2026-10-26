@@ -106,7 +106,7 @@ export default function Book() {
     setBusy(true)
     try {
       await api.post('/appointments', { dentist_id: dentistId, service_id: serviceId, date, start_time: time, payment_ref: ref })
-      addToast('success', 'Appointment booked! A confirmation SMS and email were sent to you.')
+      addToast('success', 'Appointment booked! A confirmation email was sent to you.')
       nav('/my')
     } catch (e) {
       addToast('error', errMsg(e))
@@ -206,7 +206,7 @@ export default function Book() {
           <h2 id="privacy-modal-title">Privacy Notice</h2>
           <div id="privacy-modal-description" className="privacy-notice">
             <p><b>What we collect.</b> Your name, email address, phone number, and the appointment details you choose (dentist, service, date and time).</p>
-            <p><b>Why we collect it.</b> To book and manage your appointment, and to send you confirmations, reminders and schedule changes by SMS and email.</p>
+            <p><b>Why we collect it.</b> To book and manage your appointment, and to send you confirmations and schedule changes by email.</p>
             <p><b>Who sees it.</b> Only SmileBook clinic staff who handle appointments. We do not sell your information.</p>
             <p><b>Your choices.</b> You may ask to see, correct or delete your information, or stop receiving messages, by emailing <a href={`mailto:${clinicInfo.email}`}>{clinicInfo.email}</a>.</p>
             <p className="muted"><small>Sample notice for a school project. Have it reviewed before using it for a real clinic.</small></p>
