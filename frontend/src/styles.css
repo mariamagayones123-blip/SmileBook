@@ -1055,3 +1055,35 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
 .pay-account dt { color: var(--color-muted); font-size: .88rem; }
 .pay-account dd { margin: 0; color: var(--color-primary-dark); font-weight: 700; text-align: right; }
 .qr img { max-width: 100%; height: auto; border-radius: var(--radius-control); }
+
+/* ===== Admin appointments table: fit the page without a sideways scrollbar ===== */
+/* Let long names wrap; keep the date, payment, status and buttons on one line. */
+.appt-table td, .appt-table th { white-space: normal; }
+.appt-table th { white-space: nowrap; }
+.appt-table td:nth-child(4), .appt-table td:nth-child(5), .appt-table td:nth-child(6) { white-space: nowrap; }
+.appt-table .person > div { min-width: 0; }
+.appt-table td:last-child { width: 1%; white-space: nowrap; }
+.row-actions { flex-wrap: nowrap; }
+
+/* Phones and small tablets: each appointment becomes its own card */
+@media (max-width: 900px) {
+  .appt-table, .appt-table tbody { display: block; }
+  .appt-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .appt-table tr { display: block; padding: 14px 16px; border-bottom: 1px solid var(--color-border-light); }
+  .appt-table tr:last-child { border-bottom: 0; }
+  .appt-table td, .appt-table td:first-child, .appt-table td:last-child {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: auto; padding: 6px 0; border: 0; white-space: normal; text-align: right;
+  }
+  .appt-table td:nth-child(4), .appt-table td:nth-child(5), .appt-table td:nth-child(6) { white-space: normal; }
+  .appt-table td::before {
+    content: attr(data-label); flex: none; color: var(--color-muted);
+    font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-align: left;
+  }
+  .appt-table td:first-child { justify-content: flex-start; text-align: left; padding-bottom: 10px; }
+  .appt-table td:first-child::before, .appt-table td:last-child::before { display: none; }
+  .appt-table td:last-child { justify-content: flex-start; padding-top: 10px; }
+  .appt-table td.center { justify-content: center; text-align: center; }
+  .appt-table td.center::before { display: none; }
+  .row-actions { flex-wrap: wrap; justify-content: flex-start; }
+}

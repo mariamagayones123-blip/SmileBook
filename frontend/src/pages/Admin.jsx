@@ -152,18 +152,18 @@ function Appointments() {
             {!loading && shown.length === 0 && <tr><td colSpan="7" className="muted center">No appointments found.</td></tr>}
             {!loading && shown.map((a) => (
               <tr key={a.id}>
-                <td>
+                <td data-label="Patient">
                   <div className="person">
                     <span className="mini-avatar">{initials(a.user.name)}</span>
                     <div><b>{a.user.name}</b><small>{a.user.phone}</small></div>
                   </div>
                 </td>
-                <td>{a.dentist.name}</td>
-                <td>{a.service.name}</td>
-                <td><b className="strong-line">{fmtDate(a.date)}</b><small>{to12h(a.start_time)}</small></td>
-                <td><b className="strong-line">₱{Number(a.down_payment)}</b><small className="mono">{a.payment_ref}</small></td>
-                <td><span className={`badge ${a.status}`}><i className="dot" />{a.status}</span></td>
-                <td>
+                <td data-label="Dentist">{a.dentist.name}</td>
+                <td data-label="Service">{a.service.name}</td>
+                <td data-label="Date & time"><b className="strong-line">{fmtDate(a.date)}</b><small>{to12h(a.start_time)} – {to12h(a.end_time)}</small></td>
+                <td data-label="Payment"><b className="strong-line">₱{Number(a.down_payment)}</b><small className="mono">{a.payment_ref}</small></td>
+                <td data-label="Status"><span className={`badge ${a.status}`}><i className="dot" />{a.status}</span></td>
+                <td data-label="Actions">
                   <div className="row-actions">
                     {a.status === 'pending' && <button className="btn small" disabled={actionBusyId !== null} onClick={() => setStatus(a.id, 'approved')}>
                       {actionBusyId === a.id ? 'Saving...' : 'Approve'}
