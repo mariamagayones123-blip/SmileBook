@@ -118,7 +118,7 @@ export default function App() {
             <span aria-hidden="true">{menuOpen ? '×' : '☰'}</span>
           </button>
           <nav id="primary-navigation" className={`nav-links${menuOpen ? ' open' : ''}`}>
-            {user?.role === 'patient' && (<><Link to="/">Home</Link><Link to="/book">Book</Link><Link to="/my">My Appointments</Link><Link to="/#contact">Contact</Link></>)}
+            {user?.role === 'patient' && (<><Link to="/">Home</Link><Link to="/book">Book</Link><Link to="/my-appointments">My Appointments</Link><Link to="/#contact">Contact</Link></>)}
             {!user && (<><Link to="/">Home</Link><Link to="/#contact">Contact</Link></>)}
             {user ? <button className="link" onClick={logout}>{`Log out (${user.name.split(' ')[0]})`}</button>
                   : (<><Link to="/login">Log in</Link><Link to="/register">Sign up</Link></>)}
@@ -134,7 +134,9 @@ export default function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/book" element={<Guard><Book /></Guard>} />
-            <Route path="/my" element={<Guard><MyAppointments /></Guard>} />
+            <Route path="/my-appointments" element={<Guard><MyAppointments /></Guard>} />
+            <Route path="/my" element={<Navigate to="/my-appointments" replace />} />
+            <Route path="/myappointments" element={<Navigate to="/my-appointments" replace />} />
             <Route path="/admin" element={<Guard admin><Admin /></Guard>} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

@@ -135,7 +135,7 @@ export default function Book() {
     try {
       await api.post('/appointments', { dentist_id: dentistId, service_id: serviceId, date, start_time: time, payment_ref: DEMO ? demoRef : payRef.trim() })
       addToast('success', DEMO ? 'Appointment booked! A confirmation email was sent to you.' : 'Booking submitted! The clinic will confirm it once your payment is checked.')
-      nav('/my')
+      nav('/my-appointments')
     } catch (e) {
       addToast('error', errMsg(e))
       setShowPay(false)
