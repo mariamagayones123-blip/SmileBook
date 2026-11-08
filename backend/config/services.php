@@ -34,6 +34,12 @@ return [
         'from' => env('SENDLIBERTY_FROM_EMAIL'),
     ],
 
+    // Gmail sent through a Google Apps Script web app (HTTPS, works on Render's free tier).
+    'mailrelay' => [
+        'url' => env('MAILRELAY_URL'),
+        'secret' => env('MAILRELAY_SECRET'),
+    ],
+
     'semaphore' => [
         // Set SMS_ENABLED=false in .env to turn SMS off completely (emails still go out).
         'enabled' => env('SMS_ENABLED', true),

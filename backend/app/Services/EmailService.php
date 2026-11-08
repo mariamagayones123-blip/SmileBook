@@ -23,6 +23,12 @@ class EmailService
 
     public static function send(string $to, string $subject, string $content, ?string $replyTo = null): bool
     {
+        // Google Apps Script relay (sends from the SmileBook Gmail over HTTPS). Used first when MAILRELAY_URL is set.
+        $relayUrl = config('services.mailrelay.url');
+        if ($relayUrl) {
+            return self::sendWithRelay($relayUrl, $to, $subject, $content, $replyTo);
+        }
+
         $key = config('services.sendliberty.key');
 
         if (!$key) {
@@ -59,6 +65,29 @@ class EmailService
 
         if (!$res->successful()) {
             Log::warning("Email to $to was NOT sent: HTTP {$res->status()} " . substr($res->body(), 0, 300));
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function sendWithRelay(string $url, string $to, string $subject, string $content, ?string $replyTo): bool
+    {
+        try {
+            $res = Http::asJson()->timeout(20)->post($url, [
+                'secret'   => config('services.mailrelay.secret'),
+                'to'       => $to,
+                'subject'  => $subject,
+                'text'     => $content,
+                'reply_to' => $replyTo,
+            ]);
+        } catch (Throwable $e) {
+            Log::warning("Email to $to failed (could not reach mail relay): " . $e->getMessage());
+            return false;
+        }
+
+        if (!$res->successful() || $res->json('ok') !== true) {
+            Log::warning("Email to $to was NOT sent via relay: HTTP {$res->status()} " . substr($res->body(), 0, 300));
             return false;
         }
 
