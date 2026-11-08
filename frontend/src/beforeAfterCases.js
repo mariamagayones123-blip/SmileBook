@@ -1,0 +1,156 @@
+// Before & After gallery (grouped by service category).
+//
+// To add or replace a case:
+//   1. Put your two photos in frontend/public/before-after/ (jpg, png, webp or svg)
+//   2. Point `before` and `after` to them below
+//   3. Set `sample: false` once the photos are real, so the "Sample" badge disappears
+//
+// `service` must match a service name in your Services list so the
+// "Book this service" button can preselect it, and `category` must match
+// one of the categories in serviceCategories.js.
+export const BEFORE_AFTER_CASES = [
+  {
+    category: "General & Preventive",
+    service: "Complete Dentures",
+    note: "Full dentures replace missing teeth so you can chew, speak and smile with confidence.",
+    before: '/before-after/complete-dentures-before.svg',
+    after: '/before-after/complete-dentures-after.svg',
+    sample: true,
+  },
+  {
+    category: "General & Preventive",
+    service: "Dental Check-up",
+    note: "A thorough exam spots plaque, cavities and gum problems early, so treatment can start before they get worse.",
+    before: '/before-after/dental-checkup-before.svg',
+    after: '/before-after/dental-checkup-after.svg',
+    sample: true,
+  },
+  {
+    category: "General & Preventive",
+    service: "Fluoride Treatment",
+    note: "A fluoride coating strengthens enamel and helps protect teeth from cavities.",
+    before: '/before-after/fluoride-treatment-before.svg',
+    after: '/before-after/fluoride-treatment-after.svg',
+    sample: true,
+  },
+  {
+    category: "General & Preventive",
+    service: "Jacket / Porcelain Crown",
+    note: "A porcelain crown covers a damaged tooth and restores its shape, strength and natural look.",
+    before: '/before-after/jacket-porcelain-crown-before.svg',
+    after: '/before-after/jacket-porcelain-crown-after.svg',
+    sample: true,
+  },
+  {
+    category: "General & Preventive",
+    service: "Teeth Cleaning",
+    note: "Professional cleaning removes stains and tartar for a brighter, healthier smile.",
+    before: '/before-after/teeth-cleaning-before.svg',
+    after: '/before-after/teeth-cleaning-after.svg',
+    sample: true,
+  },
+  {
+    category: "General & Preventive",
+    service: "Tooth Filling",
+    note: "A cavity is cleaned and restored so the tooth looks and feels natural again.",
+    before: '/before-after/tooth-filling-before.svg',
+    after: '/before-after/tooth-filling-after.svg',
+    sample: true,
+  },
+  {
+    category: "Orthodontics",
+    service: "Braces Adjustment",
+    note: "Regular adjustments keep the right tension on your braces so teeth keep moving toward their final position.",
+    before: '/before-after/braces-adjustment-before.svg',
+    after: '/before-after/braces-adjustment-after.svg',
+    sample: true,
+  },
+  {
+    category: "Orthodontics",
+    service: "Braces Check-up",
+    note: "Check-ups track your progress and make sure your braces are working as planned.",
+    before: '/before-after/braces-checkup-before.svg',
+    after: '/before-after/braces-checkup-after.svg',
+    sample: true,
+  },
+  {
+    category: "Orthodontics",
+    service: "Ceramic Braces Installation",
+    note: "Tooth-colored ceramic braces straighten your teeth while blending in with your smile.",
+    before: '/before-after/ceramic-braces-installation-before.svg',
+    after: '/before-after/ceramic-braces-installation-after.svg',
+    sample: true,
+  },
+  {
+    category: "Orthodontics",
+    service: "Clear Aligners",
+    note: "Removable clear aligners gradually move your teeth into place without metal brackets or wires.",
+    before: '/before-after/clear-aligners-before.svg',
+    after: '/before-after/clear-aligners-after.svg',
+    sample: true,
+  },
+  {
+    category: "Orthodontics",
+    service: "Metal Braces Installation",
+    note: "Braces gradually guide crooked or crowded teeth into a straighter, aligned smile.",
+    before: '/before-after/metal-braces-before.svg',
+    after: '/before-after/metal-braces-after.svg',
+    sample: true,
+  },
+  {
+    category: "Orthodontics",
+    service: "Retainers",
+    note: "Retainers hold your teeth in their new position after treatment so they stay straight.",
+    before: '/before-after/retainers-before.svg',
+    after: '/before-after/retainers-after.svg',
+    sample: true,
+  },
+  {
+    category: "Oral Surgery",
+    service: "Alveoloplasty",
+    note: "The jawbone ridge is smoothed and reshaped so the area heals well and fits dentures comfortably.",
+    before: '/before-after/alveoloplasty-before.svg',
+    after: '/before-after/alveoloplasty-after.svg',
+    sample: true,
+  },
+  {
+    category: "Oral Surgery",
+    service: "Impacted Tooth Removal",
+    note: "A tooth stuck under the gum or bone is carefully removed to relieve pain and prevent infection.",
+    before: '/before-after/impacted-tooth-removal-before.svg',
+    after: '/before-after/impacted-tooth-removal-after.svg',
+    sample: true,
+  },
+  {
+    category: "Oral Surgery",
+    service: "Retained Root Removal",
+    note: "Leftover tooth roots are removed to prevent infection and let the gum heal cleanly.",
+    before: '/before-after/retained-root-removal-before.svg',
+    after: '/before-after/retained-root-removal-after.svg',
+    sample: true,
+  },
+  {
+    category: "Oral Surgery",
+    service: "Surgical Tooth Extraction",
+    note: "A broken or hard-to-reach tooth is removed through a small surgical opening so the area can heal well.",
+    before: '/before-after/surgical-tooth-extraction-before.svg',
+    after: '/before-after/surgical-tooth-extraction-after.svg',
+    sample: true,
+  },
+  {
+    category: "Oral Surgery",
+    service: "Tooth Extraction",
+    note: "A damaged tooth is gently removed and the area heals cleanly.",
+    before: '/before-after/tooth-extraction-before.svg',
+    after: '/before-after/tooth-extraction-after.svg',
+    sample: true,
+  },
+  {
+    category: "Oral Surgery",
+    service: "Wisdom Tooth Removal",
+    note: "A painful or crowded wisdom tooth is taken out so the gum can heal and nearby teeth stay healthy.",
+    before: '/before-after/wisdom-tooth-removal-before.svg',
+    after: '/before-after/wisdom-tooth-removal-after.svg',
+    sample: true,
+  },
+]

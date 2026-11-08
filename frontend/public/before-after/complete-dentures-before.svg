@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800" role="img">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3efed"/><stop offset="1" stop-color="#cfe2df"/></linearGradient>
+<clipPath id="mouth"><path d="M140 410 Q300 320 460 410 Q300 535 140 410Z"/></clipPath></defs>
+<rect width="600" height="800" fill="url(#bg)"/>
+<g transform="translate(300 400) scale(1.2) translate(-300 -410)">
+<path d="M95 410 Q300 285 505 410 Q300 580 95 410Z" fill="#c9787c"/>
+<path d="M140 410 Q300 320 460 410 Q300 535 140 410Z" fill="#5b2a30"/>
+<g clip-path="url(#mouth)">
+<path d="M150 405 Q300 342 450 405 L450 432 Q300 392 150 432Z" fill="#c76f77"/>
+<path d="M155 440 Q300 468 445 440 L440 468 Q300 505 160 468Z" fill="#c76f77"/>
+<path d="M150 405 Q300 342 450 405" fill="none" stroke="#a85a62" stroke-width="3"/>
+</g>
+</g>
+<rect x="90" y="690" width="420" height="40" rx="20" fill="#ffffffcc"/><text x="300" y="716" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="700" fill="#5e7475" letter-spacing="1">SAMPLE IMAGE · REPLACE WITH YOUR PHOTO</text>
+</svg>

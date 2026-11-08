@@ -1,0 +1,25 @@
+# --- Dependencies (recreate composer/npm install) ---
+node_modules/
+vendor/
+
+# --- Frontend build ---
+frontend/dist/
+
+# --- Laravel backend (logs and cache only) ---
+backend/storage/pail
+backend/storage/logs/*.log
+backend/public/hot
+backend/public/storage
+.phpunit.result.cache
+.phpunit.cache
+
+# --- OS / editor ---
+.vscode/
+.idea/
+.fleet/
+.nova/
+.zed/
+.DS_Store
+Thumbs.db
+*.log
+.phpactor.json

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800" role="img">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3efed"/><stop offset="1" stop-color="#cfe2df"/></linearGradient>
+<clipPath id="mouth"><path d="M140 410 Q300 320 460 410 Q300 535 140 410Z"/></clipPath></defs>
+<rect width="600" height="800" fill="url(#bg)"/>
+<g transform="translate(300 400) scale(1.2) translate(-300 -410)">
+<path d="M95 410 Q300 285 505 410 Q300 580 95 410Z" fill="#c9787c"/>
+<path d="M140 410 Q300 320 460 410 Q300 535 140 410Z" fill="#5b2a30"/>
+<g clip-path="url(#mouth)">
+<rect x="167.5" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(-9 182.25 455)"/>
+<rect x="209.0" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(8 223.75 455)"/>
+<rect x="233.5" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(-6 248.25 455)"/>
+<rect x="275.0" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(11 289.75 455)"/>
+<rect x="296.5" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(-10 311.25 455)"/>
+<rect x="338.0" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(7 352.75 455)"/>
+<rect x="362.5" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(-8 377.25 455)"/>
+<rect x="402.0" y="432" width="29.5" height="46" rx="9" fill="#f1f1ea" stroke="#00000018" stroke-width="1.5" transform="rotate(6 416.75 455)"/>
+<rect x="157.5" y="387" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(-9 173.5 419.0)"/>
+<rect x="201.5" y="380" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(8 217.5 412.0)"/>
+<rect x="228.5" y="388" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(-6 244.5 420.0)"/>
+<rect x="272.5" y="379" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(11 288.5 411.0)"/>
+<rect x="296.5" y="389" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(-10 312.5 421.0)"/>
+<rect x="340.5" y="381" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(7 356.5 413.0)"/>
+<rect x="367.5" y="387" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(-8 383.5 419.0)"/>
+<rect x="409.5" y="380" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(6 425.5 412.0)"/>
+</g>
+</g>
+<rect x="90" y="690" width="420" height="40" rx="20" fill="#ffffffcc"/><text x="300" y="716" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="700" fill="#5e7475" letter-spacing="1">SAMPLE IMAGE · REPLACE WITH YOUR PHOTO</text>
+</svg>
