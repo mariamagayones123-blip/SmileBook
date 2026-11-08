@@ -29,6 +29,12 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="SMS_ENABLED" value="true"/>
+        <env name="SMS_API_KEY" value=""/>
+        <env name="SMS_SENDER" value=""/>
+        <env name="SENDLIBERTY_API_KEY" value=""/>
+        <env name="MAILRELAY_URL" value=""/>
+        <env name="MAILRELAY_SECRET" value=""/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
