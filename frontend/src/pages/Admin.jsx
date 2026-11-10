@@ -33,7 +33,7 @@ export default function Admin() {
       <PageHeader eyebrow="Clinic admin" title="Admin Panel" subtitle="Manage appointments, services, and dentist schedules in one place." />
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id} className={'tab' + (tab === t.id ? ' on' : '')} onClick={() => setTab(t.id)}>
+          <button key={t.id} role="tab" aria-selected={tab === t.id} className={'tab' + (tab === t.id ? ' on' : '')} onClick={(e) => { setTab(t.id); e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }) }}>
             <Icon name={t.icon} size={17} />{t.label}
           </button>
         ))}
@@ -134,14 +134,14 @@ function Appointments() {
       <div className="toolbar">
         <div className="chips" role="group" aria-label="Filter by status">
           {['all', 'pending', 'approved', 'done', 'cancelled'].map((k) => (
-            <button key={k} type="button" className={'chip' + (filter === k ? ' on' : '')} onClick={() => setFilter(k)}>
+            <button key={k} type="button" className={'chip' + (filter === k ? ' on' : '')} onClick={(e) => { setFilter(k); e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }) }}>
               {k}<span>{counts[k] || 0}</span>
             </button>
           ))}
         </div>
         <label className="searchbox">
           <Icon name="search" size={17} />
-          <input type="search" placeholder="Search patient, dentist, service" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search appointments" />
+          <input type="search" name="search" autoComplete="off" placeholder="Search patient, dentist, service" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search appointments" />
         </label>
       </div>
       <div className="tablewrap">
@@ -266,14 +266,14 @@ function Services() {
         <h3>{editId ? 'Edit service' : 'Add service'}</h3>
         {err && <p className="error">{err}</p>}
         <div className="inline">
-          <label>Service name<input ref={nameRef} placeholder="e.g. Teeth cleaning" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></label>
+          <label>Service name<input ref={nameRef} name="name" autoComplete="off" placeholder="e.g. Teeth cleaning" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></label>
           <label>Category
-            <select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} required>
+            <select name="category" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} required>
               {SERVICE_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
             </select>
           </label>
-          <label>Description<input placeholder="Short description (optional)" value={f.description || ''} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
-          <label>Price (₱)<input type="number" min="0" step="0.01" placeholder="e.g. 800" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} required /></label>
+          <label>Description<input name="description" autoComplete="off" placeholder="Short description (optional)" value={f.description || ''} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
+          <label>Price (₱)<input type="number" name="price" autoComplete="off" min="0" step="0.01" placeholder="e.g. 800" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} required /></label>
           <button className="btn" disabled={saving}>{saving ? 'Saving...' : editId ? 'Update' : 'Add'}</button>
         </div>
         <fieldset className="service-dentist-assignments">
@@ -284,6 +284,7 @@ function Services() {
               <label className="check" key={dentist.id}>
                 <input
                   type="checkbox"
+                  name="dentist_ids"
                   checked={f.dentist_ids.some((id) => String(id) === String(dentist.id))}
                   onChange={(event) => setF({
                     ...f,
@@ -389,14 +390,14 @@ function Schedules() {
             <div><h3>{d.name}</h3><small className="muted">{d.specialty}</small></div>
           </div>
           <div className="inline">
-            <label>Start<input type="time" value={d.start_time} onChange={(e) => upd(d.id, { start_time: e.target.value })} /></label>
-            <label>End (Mon–Fri)<input type="time" value={d.end_time} onChange={(e) => upd(d.id, { end_time: e.target.value })} /></label>
-            <label>Slot (min)<input type="number" value={d.slot_minutes} onChange={(e) => upd(d.id, { slot_minutes: Number(e.target.value) })} /></label>
+            <label>Start<input type="time" name="start_time" value={d.start_time} onChange={(e) => upd(d.id, { start_time: e.target.value })} /></label>
+            <label>End (Mon–Fri)<input type="time" name="end_time" value={d.end_time} onChange={(e) => upd(d.id, { end_time: e.target.value })} /></label>
+            <label>Slot (min)<input type="number" name="slot_minutes" value={d.slot_minutes} onChange={(e) => upd(d.id, { slot_minutes: Number(e.target.value) })} /></label>
           </div>
           <div className="days" role="group" aria-label={`Working days for ${d.name}`}>
             {DAY_NAMES.map((n, i) => (
               <label key={i} className={'day-chip' + (d.work_days.includes(i) ? ' on' : '')}>
-                <input type="checkbox" checked={d.work_days.includes(i)} onChange={() => toggleDay(d, i)} />{n}
+                <input type="checkbox" name="work_days" checked={d.work_days.includes(i)} onChange={() => toggleDay(d, i)} />{n}
               </label>
             ))}
           </div>

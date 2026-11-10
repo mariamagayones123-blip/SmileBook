@@ -87,16 +87,17 @@ export default function ContactSection() {
           <h3>Send a message</h3>
           {formError && <p className="field-error" role="alert">{formError}</p>}
           <label>Name
-            <input value={form.name} onChange={set('name')} autoComplete="name" placeholder="Your full name" required maxLength={100} />
+            <input name="name" value={form.name} onChange={set('name')} autoComplete="name" placeholder="Your full name" required maxLength={100} />
           </label>
           <label>Email
-            <input type="email" value={form.email} onChange={set('email')} autoComplete="email" placeholder="you@example.com" required maxLength={120} />
+            <input type="email" name="email" value={form.email} onChange={set('email')} autoComplete="email" placeholder="you@example.com" required maxLength={120} />
           </label>
           <label>Subject
-            <input value={form.subject} onChange={set('subject')} placeholder="What is this about?" required maxLength={150} />
+            <input name="subject" value={form.subject} onChange={set('subject')} placeholder="What is this about?" required maxLength={150} />
           </label>
           <label className="contact-message">Message
             <textarea
+              name="message"
               value={form.message}
               onChange={set('message')}
               placeholder="How can we help?"

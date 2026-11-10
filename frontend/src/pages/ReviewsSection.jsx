@@ -112,12 +112,12 @@ export default function ReviewsSection({ services }) {
           {formError && <p className="field-error" role="alert">{formError}</p>}
           {!user && (
             <label>Your name
-              <input value={form.name} onChange={set('name')} placeholder="e.g. Jamie Santos" required maxLength={100} />
+              <input name="name" autoComplete="name" value={form.name} onChange={set('name')} placeholder="e.g. Jamie Santos" required maxLength={100} />
             </label>
           )}
           {user && <p className="review-as">Posting as <b>{user.name}</b></p>}
           <label>Service
-            <select value={form.service_id} onChange={set('service_id')} required>
+            <select name="service_id" value={form.service_id} onChange={set('service_id')} required>
               <option value="">-- choose a service --</option>
               {services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}
             </select>
@@ -128,6 +128,7 @@ export default function ReviewsSection({ services }) {
           </fieldset>
           <label>Your review
             <textarea
+              name="comment"
               value={form.comment}
               onChange={set('comment')}
               placeholder="How was your visit and this service?"

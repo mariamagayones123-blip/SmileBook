@@ -23,3 +23,5 @@ backend/public/storage
 Thumbs.db
 *.log
 .phpactor.json
+
+*.pem

@@ -32,7 +32,7 @@ function CaseCard({ item, service }) {
         </div>
         <h3>{item.service}</h3>
         <p>{item.note}</p>
-        <Link className="btn ba-book" to={bookTo}>Book this service <span aria-hidden="true">→</span></Link>
+        <Link className="btn ba-book" to={bookTo}>Book this service</Link>
       </div>
     </article>
   )
@@ -94,7 +94,11 @@ export default function BeforeAfterSection({ services = [] }) {
             type="button"
             aria-pressed={category === name}
             className={category === name ? 'on' : ''}
-            onClick={() => setCategory(name)}
+            onClick={(event) => {
+              setCategory(name)
+              // On phones the tabs scroll sideways, so bring the tapped one into view
+              event.currentTarget.scrollIntoView({ behavior: smooth(), inline: 'center', block: 'nearest' })
+            }}
           >
             {name}
           </button>

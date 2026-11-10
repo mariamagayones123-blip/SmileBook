@@ -289,6 +289,7 @@ input[aria-invalid="true"] { border-color: var(--color-error); }
 }
 
 .btn:hover:not(:disabled) { transform: translateY(-1px); background: var(--color-primary-hover); box-shadow: 0 6px 14px rgba(8, 127, 120, .22); }
+a.btn:not(.ghost):hover { color: #fff; }
 .btn:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 5px rgba(8, 127, 120, .17); }
 .btn:disabled { opacity: .62; box-shadow: none; }
 .btn.ghost { border-color: var(--color-border); background: var(--color-surface); color: var(--color-primary-dark); margin-left: var(--space-2); box-shadow: none; }
@@ -504,7 +505,8 @@ tr:last-child td { border-bottom: 0; }
   }
 }
 
-.landing { display: grid; gap: clamp(56px, 8vw, 96px); }
+.landing { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(56px, 8vw, 96px); }
+.landing > * { min-width: 0; }
 
 .landing-hero {
   position: relative;
@@ -664,7 +666,8 @@ tr:last-child td { border-bottom: 0; }
 .contact-form { display: flex; flex-direction: column; }
 .contact-form .contact-message { flex: 1; display: flex; flex-direction: column; }
 .contact-form .contact-message textarea { flex: 1; min-height: 112px; }
-.contact-form .btn { align-self: flex-start; }
+.contact-form .btn { align-self: flex-end; }
+.feedback-card > .btn { display: block; width: fit-content; margin-left: auto; }
 .map-frame {
   overflow: hidden;
   border: 1px solid var(--color-border-light);
@@ -709,7 +712,7 @@ tr:last-child td { border-bottom: 0; }
 
 @media (max-width: 600px) {
   .landing { gap: 56px; }
-  .landing-hero { min-height: auto; grid-template-columns: 1fr; gap: 12px; padding: 30px 24px 16px; border-radius: 22px; }
+  .landing-hero { min-height: auto; grid-template-columns: 1fr; gap: 12px; padding: 30px 24px 28px; border-radius: 22px; }
   .hero-copy h1 { font-size: clamp(2.4rem, 12vw, 3.6rem); }
   .hero-art { min-height: 245px; }
   .hero-art::before { width: 220px; }
@@ -767,7 +770,7 @@ tr:last-child td { border-bottom: 0; }
 .dentist-option-status { flex: none; align-self: center; margin-left: auto; color: #304a48; font-size: .68rem; font-weight: 700; text-align: right; }
 .service-dentist-assignments { min-width: 0; padding: 16px; margin-top: 18px; border: 1px solid var(--color-border); border-radius: 12px; }
 .service-dentist-assignments legend { padding: 0 6px; color: var(--color-primary-dark); font-size: .9rem; font-weight: 700; }
-.service-dentist-options { display: flex; flex-wrap: wrap; gap: 12px 22px; }
+.service-dentist-options { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
 .service-dentist-options .check { align-items: center; gap: 10px; line-height: 1.4; cursor: pointer; }
 .service-dentist-options .check input { flex: none; width: 18px; height: 18px; padding: 0; margin: 0; }
 .service-dentist-options .check span { display: block; }
@@ -794,7 +797,7 @@ tr:last-child td { border-bottom: 0; }
 .appt-column > h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--color-border-light); }
 .appt-count { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 999px; background: var(--color-border-light); color: var(--color-primary-dark); font-size: .78rem; font-weight: 700; }
 .appt-card { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
-.appt-card .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.appt-card .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 @media (max-width: 900px) {
   .appt-board { grid-template-columns: 1fr; }
 }
@@ -908,10 +911,27 @@ tr:last-child td { border-bottom: 0; }
 
 @media (max-width: 700px) {
   .page-head { align-items: flex-start; flex-direction: column; border-radius: 20px; }
-  .tabs { display: flex; border-radius: 18px; }
-  .tab { flex: 1 1 calc(50% - 4px); justify-content: center; padding: 8px 10px; }
-  .toolbar { align-items: stretch; flex-direction: column; }
+  /* Admin tabs: one row that scrolls sideways instead of wrapping into 2 rows */
+  .tabs { display: flex; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; border-radius: 999px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: 0 0 auto; white-space: nowrap; scroll-snap-align: center; justify-content: center; padding: 8px 16px; }
+  .toolbar { align-items: stretch; flex-direction: column; flex-wrap: nowrap; }
   .searchbox { width: 100%; }
+  /* Add/Edit service form: stack fields full width so they line up (desktop uses align-items: end) */
+  .service-form .inline { align-items: stretch; }
+  .service-form .inline > label { flex: none; width: 100%; }
+  .service-form .inline .btn { width: 100%; margin: 4px 0 14px; }
+  /* Appointments status filters: one row that scrolls sideways instead of wrapping */
+  .chips { min-width: 0; max-width: 100%; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 2px 6px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; white-space: nowrap; scroll-snap-align: center; }
+  /* Schedules: the 7 day buttons share one row, each taking an equal width */
+  .days { display: grid; grid-template-columns: repeat(7, minmax(34px, 1fr)); gap: 4px; padding: 5px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .days::-webkit-scrollbar { display: none; }
+  .day-chip { min-width: 0; padding: 0; font-size: .78rem; }
+}
+@media (max-width: 380px) {
+  .day-chip { font-size: .72rem; }
 }
 
 .appt-table th:first-child, .appt-table td:first-child { padding-left: 18px; }
@@ -959,7 +979,7 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
 
 /* Before & After gallery */
 .ba-carousel { --cols: 3; --gap: 24px; position: relative; container-type: inline-size; }
-.ba-track { display: flex; gap: var(--gap); margin: 0; padding: 4px 0 16px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; position: relative; }
+.ba-track { display: flex; gap: var(--gap); margin: 0; padding: 4px 0 16px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; position: relative; }
 .ba-track::-webkit-scrollbar { display: none; }
 .ba-track:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 4px; border-radius: var(--radius-card); }
 .ba-track > .ba-card { flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); scroll-snap-align: start; }
@@ -981,12 +1001,18 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
 .ba-nav-next { right: 12px; }
 .ba-body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 20px 22px 24px; }
 .ba-body h3 { margin: 12px 0 6px; }
-.ba-body p { margin: 0 0 18px; color: var(--color-muted); }
-.ba-dots { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--color-soft-tabs); }
+.ba-body p { margin: 0 0 18px; color: var(--color-muted); text-align: justify; width: 100%; }
+.ba-dots { display: inline-flex; align-self: center; padding: 3px; border-radius: 999px; background: var(--color-soft-tabs); }
 .ba-dots button { padding: 6px 16px; border: 0; border-radius: 999px; background: transparent; color: var(--color-muted); font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
 .ba-dots button.on { background: var(--color-surface); color: var(--color-primary-dark); box-shadow: 0 1px 4px rgba(16, 63, 66, .15); }
-.ba-book { margin-top: auto; }
+.ba-book { width: 100%; margin-top: auto; text-align: center; }
 .ba-disclaimer { margin: 18px 0 0; color: var(--color-muted); font-size: .85rem; }
+/* Phones: category tabs become one row that scrolls sideways instead of wrapping */
+@media (max-width: 600px) {
+  .ba-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 24px 6px 2px; margin-bottom: 18px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+  .ba-tabs::-webkit-scrollbar { display: none; }
+  .ba-tabs button { flex: 0 0 auto; white-space: nowrap; scroll-snap-align: center; padding: 10px 18px; }
+}
 @media (max-width: 900px) { .ba-carousel { --cols: 2; } }
 @media (max-width: 600px) { .ba-carousel { --cols: 1; } }
 @media (prefers-reduced-motion: reduce) { .ba-img, .ba-nav { transition: none; } }
@@ -1082,8 +1108,58 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
   }
   .appt-table td:first-child { justify-content: flex-start; text-align: left; padding-bottom: 10px; }
   .appt-table td:first-child::before, .appt-table td:last-child::before { display: none; }
-  .appt-table td:last-child { justify-content: flex-start; padding-top: 10px; }
+  .appt-table td:last-child { justify-content: flex-end; padding-top: 10px; }
   .appt-table td.center { justify-content: center; text-align: center; }
   .appt-table td.center::before { display: none; }
-  .row-actions { flex-wrap: wrap; justify-content: flex-start; }
+  .row-actions { flex-wrap: wrap; justify-content: flex-end; }
 }
+
+/* Phones: action buttons sit on the right side of their card */
+@media (max-width: 700px) {
+  .svc-card .actions { justify-content: flex-end; }
+  .appt-card .actions { justify-content: flex-end; }
+
+  .sched-card > .btn { display: block; width: fit-content; margin-left: auto; }
+}
+
+/* Login / Sign up on phones and tablets: keep the tooth art centered and fully inside the card */
+@media (max-width: 850px) {
+  .auth-intro { padding-bottom: 28px; }
+  .auth-art { width: min(100%, 280px); min-height: 0; aspect-ratio: 1; margin: 28px auto 0; }
+}
+
+/* Phones: keep the same side-by-side hero as desktop (text on the left, tooth art on the right), just scaled down */
+@media (max-width: 600px) {
+  .landing-hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: center; gap: 6px; padding: 26px 12px 26px 20px; }
+  .hero-copy .eyebrow { margin-bottom: 8px; font-size: .6rem; letter-spacing: .1em; }
+  .hero-copy h1 { margin-bottom: 10px; font-size: clamp(1.7rem, 8.4vw, 2.3rem); line-height: 1; }
+  .hero-tagline { margin-bottom: 8px; font-size: 1rem; }
+  .hero-description { margin-bottom: 14px; font-size: .82rem; line-height: 1.5; }
+  .hero-cta { min-width: 0; padding-left: 16px; padding-right: 16px; min-height: 40px; font-size: .85rem; }
+  .hero-note { align-items: flex-start; gap: 6px; margin-top: 14px; font-size: .72rem; line-height: 1.4; }
+  .hero-note svg { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+  .hero-art { width: 100%; min-height: 0; aspect-ratio: 1; }
+  .hero-art::before { width: 84%; }
+  .hero-art-orbit { width: 100%; }
+  .orbit-two { width: 90%; }
+  .hero-tooth { width: 52%; }
+  .hero-float-card { right: -4px; bottom: 2%; gap: 5px; padding: 6px 8px; border-radius: 10px; }
+  .hero-float-icon { width: 22px; height: 22px; border-radius: 7px; }
+  .hero-float-icon svg { width: 13px; height: 13px; }
+  .hero-float-card b { max-width: 54px; font-size: .6rem; line-height: 1.2; }
+  .hero-float-card small { display: none; }
+}
+@media (max-width: 380px) {
+  .hero-copy .eyebrow { font-size: .54rem; letter-spacing: .06em; }
+}
+
+/* Admin appointment cards on phones: keep the date and time from splitting in the middle */
+@media (max-width: 900px) {
+  .appt-table td:nth-child(4), .appt-table td:nth-child(5) { flex-wrap: wrap; justify-content: flex-end; row-gap: 2px; }
+  .appt-table td:nth-child(4)::before, .appt-table td:nth-child(5)::before { margin-right: auto; }
+  .appt-table td:nth-child(4) b, .appt-table td:nth-child(4) small, .appt-table td:nth-child(5) b, .appt-table td:nth-child(5) small { white-space: nowrap; }
+}
+
+/* Book: keep the "Continue to down payment" button on the right on every screen size */
+.form-actions { display: flex; justify-content: flex-end; }
+.form-actions + .consent-hint { text-align: right; }

@@ -77,12 +77,13 @@ function FieldError({ id, message }) {
   return <small id={id} className="field-msg" role="alert"><WarnIcon />{message}</small>
 }
 
-export function PasswordInput({ value, onChange, onBlur, autoComplete, required, minLength, placeholder, describedBy, invalid }) {
+export function PasswordInput({ name, value, onChange, onBlur, autoComplete, required, minLength, placeholder, describedBy, invalid }) {
   const [visible, setVisible] = useState(false)
   return (
     <span className="password-field">
       <input
         type={visible ? 'text' : 'password'}
+        name={name}
         autoComplete={autoComplete}
         value={value}
         onChange={onChange}
@@ -318,6 +319,7 @@ export default function Auth({ mode }) {
           <label>Full name
             <span className="input-wrap">
               <input
+                name="name"
                 autoComplete="name"
                 value={f.name}
                 onChange={set('name')}
@@ -336,6 +338,7 @@ export default function Auth({ mode }) {
             <span className="input-wrap">
               <input
                 type="tel"
+                name="phone"
                 inputMode="numeric"
                 autoComplete="tel"
                 value={f.phone}
@@ -352,9 +355,10 @@ export default function Auth({ mode }) {
             <FieldError id="phone-error" message={fieldErr.phone} />
           </label>
         </>)}
-        <label>Email address<input type="email" autoComplete="email" value={f.email} onChange={set('email')} placeholder={isReg ? 'you@gmail.com' : 'you@example.com'} required /></label>
+        <label>Email address<input type="email" name="email" autoComplete="email" value={f.email} onChange={set('email')} placeholder={isReg ? 'you@gmail.com' : 'you@example.com'} required /></label>
         <label>Password
           <PasswordInput
+            name="password"
             autoComplete={isReg ? 'new-password' : 'current-password'}
             value={f.password}
             onChange={set('password')}
@@ -370,6 +374,7 @@ export default function Auth({ mode }) {
         {isReg && (
           <label>Confirm password
             <PasswordInput
+              name="password_confirmation"
               autoComplete="new-password"
               value={f.password_confirmation}
               onChange={set('password_confirmation')}

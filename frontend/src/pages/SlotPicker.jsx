@@ -36,7 +36,7 @@ export default function SlotPicker({ dentistId, dentistWorkDays, date, setDate, 
   return (
     <div>
       <label>Appointment date
-        <input type="date" min={minDate()} value={date} onChange={(e) => setDate(e.target.value)} />
+        <input type="date" name="appointment_date" min={minDate()} value={date} onChange={(e) => setDate(e.target.value)} />
       </label>
       <p className="date-rule">Appointments must be booked at least 2 days in advance. Choose a date on or after <strong>{minDate()}</strong>.</p>
       {err && <p className="error">{err}</p>}

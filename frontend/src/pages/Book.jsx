@@ -150,7 +150,7 @@ export default function Book() {
       <div className="card">
         {loadErr && <p className="error" role="alert">Could not load the booking options: {loadErr}</p>}
         <label>1. Service
-          <select value={serviceId} onChange={(e) => selectService(e.target.value)}>
+          <select name="service" value={serviceId} onChange={(e) => selectService(e.target.value)}>
             <option value="">-- choose a service --</option>
             {SERVICE_CATEGORIES.map((category) => (
               <optgroup key={category} label={category}>
@@ -164,9 +164,9 @@ export default function Book() {
         {selectionHint && <p className="booking-selection-hint" role="status">{selectionHint}</p>}
         <fieldset className={`dentist-picker${!service ? ' is-locked' : ''}`} aria-describedby="dentist-picker-hint">
           <legend>2. Choose a dentist</legend>
-          <p id="dentist-picker-hint" className="muted"><small>{service ? 'Doctors who cannot provide this service are shown with a reason and cannot be selected.' : 'Pick a service first.'}</small></p>
-          {!service && dentist && <p className="preselected-dentist">Preselected from your link: <b>{dentist.name}</b>. Pick a service to check eligibility.</p>}
-          {!service && <p className="dentist-picker-prompt">Pick a service first.</p>}
+          <p id="dentist-picker-hint" className="muted"><small>{service ? 'Doctors who cannot provide this service are shown with a reason and cannot be selected.' : 'Select a service to view available dentists.'}</small></p>
+          {!service && dentist && <p className="preselected-dentist">Preselected from your link: <b>{dentist.name}</b>. Select a service to check eligibility.</p>}
+          {!service && <p className="dentist-picker-prompt">Select a service to view available dentists.</p>}
           {service && dentists.length === 0 && <p className="muted">No doctors are available right now.</p>}
           {service && dentists.length > 0 && (
             <div className="dentist-options" role="radiogroup" aria-label="Choose a dentist">
@@ -206,6 +206,7 @@ export default function Book() {
           <label>Mobile number (for SMS reminders)
             <input
               type="tel"
+              name="phone"
               inputMode="numeric"
               autoComplete="tel"
               maxLength={11}
@@ -217,7 +218,7 @@ export default function Book() {
           </label>
         )}
         <label className="consent-check">
-          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          <input type="checkbox" name="consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
           <span>
             I agree to the SmileBook{' '}
             <button type="button" className="consent-link" onClick={() => setShowPrivacy(true)}>Privacy Notice</button>
@@ -225,7 +226,9 @@ export default function Book() {
             {clinicInfo.smsEnabled && ' Message and data rates may apply.'} To stop receiving messages, contact the clinic at {clinicInfo.email}.
           </span>
         </label>
-        <button className="btn" disabled={!ready || !consent || busy || (needsPhone && !phoneOk)} onClick={goToPayment}>Continue to down payment</button>
+        <div className="form-actions">
+          <button className="btn" disabled={!ready || !consent || busy || (needsPhone && !phoneOk)} onClick={goToPayment}>Continue to down payment</button>
+        </div>
         {ready && !consent && <p className="muted consent-hint"><small>Please tick the box above to continue.</small></p>}
       </div>
 
@@ -268,6 +271,7 @@ export default function Book() {
             <label>{clinicInfo.payment.method} reference number
               <input
                 type="text"
+                name="payment_reference"
                 inputMode="text"
                 autoComplete="off"
                 maxLength={30}

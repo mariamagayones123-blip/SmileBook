@@ -104,7 +104,7 @@ export default function Dentists() {
           <h1 id="hero-heading">{clinicInfo.name}</h1>
           <p className="hero-tagline">{clinicInfo.tagline}</p>
           <p className="hero-description">Thoughtful dental care, easy appointment booking, and a team here to help you smile with confidence.</p>
-          <Link className="btn hero-cta" to="/book">Book now <span aria-hidden="true">→</span></Link>
+          <Link className="btn hero-cta" to="/book">Book now</Link>
           <div className="hero-note"><Icon name="tooth" /> Care for every smile, from check-up to follow-up.</div>
         </div>
         <div className="hero-art" aria-hidden="true">
@@ -126,7 +126,6 @@ export default function Dentists() {
           <div><span className="eyebrow">Meet your care team</span><h2 id="doctors-heading">Our Doctors</h2></div>
           <p>Friendly professionals ready to support your dental health.</p>
         </div>
-        <p className="muted"><small>Sample profiles for demonstration only.</small></p>
         {dentistsLoading && <p className="muted" role="status">Loading doctors...</p>}
         {dentistError && <p className="error" role="alert">Could not load doctors: {dentistError}</p>}
         {!dentistsLoading && !dentistError && dentists.length === 0 && <p className="muted">No doctors are currently listed.</p>}
@@ -232,7 +231,7 @@ export default function Dentists() {
           <span><Icon name="facebook" /><a href={clinicInfo.facebookUrl} target="_blank" rel="noreferrer">facebook.com/smilebook4dental</a></span>
         </div>
         <div>
-          <Link className="footer-book" to="/book">Book an appointment <span aria-hidden="true">→</span></Link>
+          <Link className="footer-book" to="/book">Book an appointment</Link>
           <p className="footer-legal"><Link to="/terms">Terms</Link> · <Link to="/privacy">Privacy Policy</Link> · <Link to="/data-deletion">Data deletion</Link></p>
         </div>
       </footer>

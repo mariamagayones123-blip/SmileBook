@@ -90,7 +90,7 @@ export default function ForgotPassword() {
         {info && <p className="auth-info" role="status">{info}</p>}
         {step === 'email' ? (
           <label>Email address
-            <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@gmail.com" required />
+            <input type="text" name="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@gmail.com" required />
           </label>
         ) : (
           <>
@@ -100,6 +100,7 @@ export default function ForgotPassword() {
             </div>
             <label>New password
               <PasswordInput
+                name="password"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -112,6 +113,7 @@ export default function ForgotPassword() {
             <PasswordChecklist id="password-hint" value={password} touched={pwTouched} />
             <label>Confirm new password
               <PasswordInput
+                name="password_confirmation"
                 autoComplete="new-password"
                 value={passwordConfirmation}
                 onChange={(e) => setPasswordConfirmation(e.target.value)}

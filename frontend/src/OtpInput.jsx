@@ -67,6 +67,7 @@ export default function OtpInput({ value, onChange, length = 6, disabled = false
           ref={(el) => { refs.current[i] = el }}
           className={'otp-box' + (value[i] ? ' filled' : '')}
           type="text"
+          name={`otp-${i + 1}`}
           inputMode="numeric"
           pattern="[0-9]*"
           autoComplete={i === 0 ? 'one-time-code' : 'off'}
