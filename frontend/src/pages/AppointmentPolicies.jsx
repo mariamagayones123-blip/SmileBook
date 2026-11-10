@@ -4,9 +4,11 @@ const POLICY_GROUPS = [
   {
     title: 'Appointment Guidelines',
     items: [
+      'Appointments must be booked at least 2 days ahead. The same rule applies to the new date when you reschedule.',
       'Please arrive at least 15 minutes before your scheduled appointment to allow time for registration, forms, and preparation before your consultation.',
       'Kindly arrive on time to maximize your scheduled treatment period. Late arrivals may require adjustments to the appointment schedule.',
       'If you need to reschedule or cancel your appointment, please do so as early as possible from the My Appointments page or by contacting the clinic, so we can assist you and accommodate other patients.',
+      'When you reschedule, your appointment goes back to pending until the clinic approves the new time.',
     ],
   },
   {
