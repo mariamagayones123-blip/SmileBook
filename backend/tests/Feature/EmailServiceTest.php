@@ -8,9 +8,9 @@ use Tests\TestCase;
 
 class EmailServiceTest extends TestCase
 {
-    public function test_without_an_api_key_it_uses_the_normal_laravel_mailer(): void
+    public function test_without_a_relay_url_it_uses_the_normal_laravel_mailer(): void
     {
-        config(['services.sendliberty.key' => null]);
+        config(['services.mailrelay.url' => null]);
         Http::fake();
 
         $this->assertTrue(EmailService::send('a@gmail.com', 'Hi', 'Hello there'));
@@ -19,26 +19,33 @@ class EmailServiceTest extends TestCase
         $this->assertCount(1, Mail::mailer('array')->getSymfonyTransport()->messages());
     }
 
-    public function test_with_an_api_key_it_sends_over_https_and_escapes_the_text(): void
+    public function test_with_a_relay_url_it_sends_over_https_with_the_secret_and_plain_text(): void
     {
-        config(['services.sendliberty.key' => 'test-key', 'services.sendliberty.from' => 'clinic@gmail.com']);
-        Http::fake(['sendliberty.com/*' => Http::response(['success' => true], 200)]);
+        config(['services.mailrelay.url' => 'https://relay.test/exec', 'services.mailrelay.secret' => 'test-secret']);
+        Http::fake(['relay.test/*' => Http::response(['ok' => true], 200)]);
 
-        $this->assertTrue(EmailService::send('a@gmail.com', 'Hi', "Line 1\n<script>alert(1)</script>", 'reply@gmail.com'));
+        $this->assertTrue(EmailService::send('a@gmail.com', 'Hi', 'Line 1', 'reply@gmail.com'));
 
-        Http::assertSent(fn ($req) => $req->url() === 'https://sendliberty.com/api/send'
-            && $req->hasHeader('X-API-Key', 'test-key')
+        Http::assertSent(fn ($req) => $req->url() === 'https://relay.test/exec'
+            && $req['secret'] === 'test-secret'
             && $req['to'] === 'a@gmail.com'
-            && $req['from'] === 'clinic@gmail.com'
-            && $req['reply_to'] === 'reply@gmail.com'
-            && str_contains($req['html'], '&lt;script&gt;')
-            && !str_contains($req['html'], '<script>'));
+            && $req['subject'] === 'Hi'
+            && $req['text'] === 'Line 1'
+            && $req['reply_to'] === 'reply@gmail.com');
     }
 
-    public function test_an_api_error_returns_false_instead_of_throwing(): void
+    public function test_a_relay_error_returns_false_instead_of_throwing(): void
     {
-        config(['services.sendliberty.key' => 'test-key']);
-        Http::fake(['sendliberty.com/*' => Http::response('Unauthorized', 401)]);
+        config(['services.mailrelay.url' => 'https://relay.test/exec']);
+        Http::fake(['relay.test/*' => Http::response('Unauthorized', 401)]);
+
+        $this->assertFalse(EmailService::send('a@gmail.com', 'Hi', 'Hello'));
+    }
+
+    public function test_a_relay_that_answers_ok_false_returns_false(): void
+    {
+        config(['services.mailrelay.url' => 'https://relay.test/exec']);
+        Http::fake(['relay.test/*' => Http::response(['ok' => false], 200)]);
 
         $this->assertFalse(EmailService::send('a@gmail.com', 'Hi', 'Hello'));
     }

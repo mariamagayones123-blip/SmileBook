@@ -1,24 +1,126 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PageHeader from '../PageHeader'
 import api, { errMsg, to12h, toYMD, formatDate, statusLabel } from '../api'
 import Modal, { ConfirmModal } from '../Modal'
 import SlotPicker from './SlotPicker'
+import Icon from '../Icons'
+import doctorPhoto from '../doctorPhotos'
+import { useToast } from '../Toast'
+
+const STATUS_ICON = { pending: 'clock', approved: 'check', done: 'check', cancelled: 'x' }
+
+// Two-letter initials for the default avatar, ignoring the "Dr." prefix.
+const initials = (name = '') => name.replace(/^Dr\.?\s*/i, '').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+
+// Doctor photo from /public/doctors (same helper the Dentists and Admin pages use); falls back to initials.
+function DoctorAvatar({ name }) {
+  const [broken, setBroken] = useState(false)
+  const photo = doctorPhoto(name)
+  return (
+    <div className="appt-avatar">
+      {photo && !broken
+        ? <img src={photo} alt={name} loading="lazy" onError={() => setBroken(true)} />
+        : <span aria-hidden="true">{initials(name)}</span>}
+    </div>
+  )
+}
 
 // Defined outside MyAppointments so React does not remount every row on each render.
 function Row({ a, actions, busy, cancellingId, onReschedule, onCancel }) {
+  const { addToast } = useToast()
+  const [copied, setCopied] = useState(false)
+  const timer = useRef(null)
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  const copyRef = async () => {
+    try {
+      await navigator.clipboard.writeText(a.payment_ref)
+    } catch {
+      // Older browsers or non-secure pages: fall back to a temporary textarea.
+      const t = document.createElement('textarea')
+      t.value = a.payment_ref
+      document.body.appendChild(t)
+      t.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(t)
+      if (!ok) { addToast('error', 'Could not copy the reference number.'); return }
+    }
+    setCopied(true)
+    addToast('success', 'Reference number copied.')
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div className="card row appt-card">
-      <div>
-        <b>{a.service.name}</b> with {a.dentist.name}<br />
-        {formatDate(a.date)} · {to12h(a.start_time)} – {to12h(a.end_time)}<br />
-        <span className={`badge ${a.status}`}>{statusLabel(a.status)}</span> <small className="muted">Down payment ₱{Number(a.down_payment)} · {a.payment_ref}</small>
+      <div className="appt-head">
+        <DoctorAvatar name={a.dentist.name} />
+        <div className="appt-title">
+          <div className="appt-service">{a.service.name}</div>
+          <div className="appt-dentist">With {a.dentist.name}</div>
+        </div>
+        <span className={`badge ${a.status}`}>
+          <Icon name={STATUS_ICON[a.status] || 'clock'} size={14} />
+          {statusLabel(a.status)}
+        </span>
       </div>
-      {actions && <div className="actions">
-        <button className="btn small" onClick={() => onReschedule(a)}>Reschedule</button>
-        <button className="btn small danger" disabled={busy} onClick={() => onCancel(a)}>
-          {cancellingId === a.id ? 'Cancelling...' : 'Cancel'}
+
+      <div className="appt-when">
+        <div className="appt-field">
+          <span className="appt-field-icon"><Icon name="calendar" size={20} /></span>
+          <div>
+            <div className="appt-label">Appointment date</div>
+            <div className="appt-value">{formatDate(a.date)}</div>
+          </div>
+        </div>
+        <div className="appt-field">
+          <span className="appt-field-icon"><Icon name="clock" size={20} /></span>
+          <div>
+            <div className="appt-label">Appointment time</div>
+            <div className="appt-value">{to12h(a.start_time)} – {to12h(a.end_time)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="appt-payment">
+        <div className="appt-field">
+          <span className="appt-field-icon"><Icon name="wallet" size={20} /></span>
+          <div>
+            <div className="appt-label">Down payment</div>
+            <div className="appt-value">₱{Number(a.down_payment).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+          </div>
+        </div>
+        <div className="appt-field appt-ref-field">
+          <span className="appt-field-icon"><Icon name="hash" size={20} /></span>
+          <div>
+            <div className="appt-label">Reference number</div>
+            <div className="appt-ref-row">
+              <span className="appt-value appt-ref">{a.payment_ref}</span>
+              <button type="button" className={`appt-copy${copied ? ' copied' : ''}`} onClick={copyRef}
+                aria-label={copied ? 'Reference number copied' : 'Copy reference number'} title="Copy reference number">
+                <Icon name={copied ? 'check' : 'copy'} size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {actions ? <div className="appt-actions">
+        <button className="btn" onClick={() => onReschedule(a)}>
+          <Icon name="calendarClock" size={18} />Reschedule
         </button>
-      </div>}
+        <button className="btn danger-soft" disabled={busy} onClick={() => onCancel(a)}>
+          <Icon name="x" size={18} />{cancellingId === a.id ? 'Cancelling...' : 'Cancel'}
+        </button>
+      </div> : a.status === 'cancelled' ? (
+        <div className="appt-note">
+          <div className="appt-note-title">Appointment cancelled</div>
+          <div className="appt-note-text">This appointment is no longer active.</div>
+        </div>
+      ) : (
+        // Past cards have no buttons; this invisible row keeps every card the same height.
+        <div className="appt-actions appt-actions-empty" aria-hidden="true"><span className="btn">&nbsp;</span></div>
+      )}
     </div>
   )
 }

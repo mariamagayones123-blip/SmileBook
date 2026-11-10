@@ -74,7 +74,7 @@ Check the frontend builds with `npm run build` in `frontend`.
   MAIL_FROM_ADDRESS=yourclinic@gmail.com
   ```
   Then run `php artisan config:clear`.
-- **Deployed site (Render):** Render's free tier blocks SMTP, so Gmail SMTP will not work there. Use the Sendliberty API instead (see "Email on Render" below).
+- **Deployed site (Render):** Render's free tier blocks SMTP, so Gmail SMTP will not work there. Use the Gmail mail relay instead (see "Email on Render" below).
 - Sign-up and Forgot password accept Gmail addresses only (for example `juan@gmail.com`).
 - The "Contact us" form saves the message and emails it to `CONTACT_RECEIVER_EMAIL` (default `smilebook4dental@gmail.com`).
 
@@ -119,8 +119,8 @@ DB_PASSWORD=<your Supabase database password>
 DB_SSLMODE=require
 ADMIN_EMAIL=<your admin email>
 ADMIN_PASSWORD=<a strong password, 8+ characters>
-SENDLIBERTY_API_KEY=<from sendliberty.com, see "Email on Render" below>
-SENDLIBERTY_FROM_EMAIL=<the Gmail you connected there>
+MAILRELAY_URL=<the Google Apps Script web app URL, see "Email on Render" below>
+MAILRELAY_SECRET=<the secret you set inside the script>
 CONTACT_RECEIVER_EMAIL=<the clinic Gmail that receives Contact us messages>
 SMS_ENABLED=false
 ```
@@ -132,12 +132,12 @@ Demo accounts are never created when `APP_ENV=production`.
 Render's free service goes to sleep when nobody uses it, so the first request after a while can take about a minute. Open the site once before a demo.
 
 ## Email on Render
-Render's free tier blocks SMTP (ports 25, 465 and 587), so Gmail SMTP cannot be used there. SmileBook sends email through the Sendliberty API (HTTPS) when `SENDLIBERTY_API_KEY` is set:
-1. Create an account at sendliberty.com and connect the clinic's Gmail with Google. Emails are sent through that Gmail account, so no domain setup is needed.
-2. Create an API key. Put it in Render as `SENDLIBERTY_API_KEY`, and put the connected Gmail address in `SENDLIBERTY_FROM_EMAIL`.
-3. Test on the live site: use **Forgot password** with a Gmail that has an account, and check that the 6-digit code arrives. If not, read the Render logs for a line starting with `Email to ... was NOT sent`.
+Render's free tier blocks SMTP (ports 25, 465 and 587), so Gmail SMTP cannot be used there. SmileBook sends email through a small Google Apps Script web app (a "mail relay") over HTTPS when `MAILRELAY_URL` is set. The script sends the email from the clinic's Gmail account, so no domain setup is needed.
+1. Deploy your Apps Script as a web app and put a secret value inside the script.
+2. In Render, set `MAILRELAY_URL` to the web app URL and `MAILRELAY_SECRET` to the same secret.
+3. Test on the live site: use **Forgot password** with a Gmail that has an account, and check that the 6-digit code arrives. If not, read the Render logs for a line starting with `Email to ... was NOT sent via relay`.
 
-When `SENDLIBERTY_API_KEY` is empty (your own computer, the tests), the normal `MAIL_MAILER` setting is used instead. Sendliberty is a small third-party service, so treat it as fine for a school project and look at a bigger provider (Resend, Brevo, Mailgun) if the clinic goes live for real.
+When `MAILRELAY_URL` is empty (your own computer, the tests), the normal `MAIL_MAILER` setting is used instead.
 
 If you change the frontend URL later, update `CORS_ALLOWED_ORIGINS` too, or login and every API call will be blocked by the browser.
 
@@ -177,7 +177,7 @@ With `SMS_ENABLED=true` and an empty `SMS_API_KEY`, messages are only written to
 | `Database file ... does not exist` | Create the empty file `backend/database/database.sqlite` (see Quick start). |
 | `No application encryption key has been specified` | Run `php artisan key:generate`. |
 | Seeding says "already has data" | That is fine. For a clean start run `php artisan migrate:fresh --seed`. |
-| Forgot password says "We could not send the email" on the deployed site | Check `SENDLIBERTY_API_KEY` and `SENDLIBERTY_FROM_EMAIL` in Render, and that the Gmail is still connected on sendliberty.com. |
+| Forgot password says "We could not send the email" on the deployed site | Check `MAILRELAY_URL` and `MAILRELAY_SECRET` in Render, and that the Apps Script web app is still deployed. |
 | Render says `exec ./docker-entrypoint.sh: no such file` | The file got Windows line endings. The Dockerfile already fixes this; make sure you deployed the latest commit. |
 | Login or booking fails on the deployed site | Check `CORS_ALLOWED_ORIGINS` (backend) and `VITE_API_URL` (Vercel, then redeploy). |
 | `.env` changes do nothing | Run `php artisan config:clear`. For the frontend, restart `npm run dev`. |

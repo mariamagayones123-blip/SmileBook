@@ -28,13 +28,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    // Email over HTTPS (needed on hosts that block SMTP, like Render's free tier). Leave empty to use Laravel's normal mailer.
-    'sendliberty' => [
-        'key' => env('SENDLIBERTY_API_KEY'),
-        'from' => env('SENDLIBERTY_FROM_EMAIL'),
-    ],
-
     // Gmail sent through a Google Apps Script web app (HTTPS, works on Render's free tier).
+    // Leave MAILRELAY_URL empty to use Laravel's normal mailer (MAIL_MAILER) instead.
     'mailrelay' => [
         'url' => env('MAILRELAY_URL'),
         'secret' => env('MAILRELAY_SECRET'),

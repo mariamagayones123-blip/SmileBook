@@ -551,11 +551,6 @@ tr:last-child td { border-bottom: 0; }
 .section-heading-row { display: flex; max-width: none; justify-content: space-between; align-items: end; gap: 24px; }
 .section-heading-row > p { max-width: 390px; margin: 0 0 4px; color: var(--color-muted); }
 
-.about-section { padding: clamp(26px, 5vw, 48px); border: 1px solid var(--color-border-light); border-radius: 24px; background: #fff; box-shadow: var(--shadow-card); }
-.about-section .section-heading { max-width: 580px; }
-.about-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 48px; align-items: start; }
-.about-description { max-width: 520px; margin: 0; color: var(--color-muted); font-size: 1rem; }
-.clinic-details { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 18px; }
 .clinic-detail { display: flex; min-width: 0; align-items: flex-start; gap: 11px; }
 .clinic-detail > svg { flex: none; width: 19px; height: 19px; margin-top: 2px; color: var(--color-primary); }
 .clinic-detail b { display: block; margin-bottom: 3px; color: var(--color-primary-dark); font-size: .84rem; }
@@ -564,9 +559,6 @@ tr:last-child td { border-bottom: 0; }
 .clinic-detail a { color: var(--color-muted); text-decoration: none; }
 .clinic-detail a:hover { color: var(--color-primary); }
 .placeholder-value { color: var(--color-accent); font-weight: 600; }
-.map-placeholder { display: flex; min-height: 92px; grid-column: 1 / -1; justify-content: center; align-items: center; gap: 10px; padding: 18px; border: 1px dashed #b7d4ce; border-radius: 14px; background: linear-gradient(135deg, #f1f8f6, #f9fbfa); color: var(--color-muted); text-align: center; font-size: .88rem; }
-.map-placeholder svg { flex: none; width: 20px; height: 20px; color: var(--color-primary); }
-.map-placeholder a { color: var(--color-primary-dark); font-weight: 700; }
 
 .doctor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; }
 .doctor-card { display: flex; flex-direction: column; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-surface); box-shadow: var(--shadow-card); transition: border-color var(--transition-ui), box-shadow var(--transition-ui); }
@@ -704,7 +696,7 @@ tr:last-child td { border-bottom: 0; }
   .landing-hero { grid-template-columns: 1.1fr .9fr; padding: 36px; }
   .hero-art { min-height: 260px; }
   .hero-float-card { right: -8px; }
-  .about-layout, .reviews-layout, .contact-layout, .auth-page { grid-template-columns: 1fr; gap: 24px; }
+  .reviews-layout, .contact-layout, .auth-page { grid-template-columns: 1fr; gap: 24px; }
   .auth-intro { padding: 28px 24px 16px; }
   .auth-art { min-height: 170px; }
   .service-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -722,9 +714,6 @@ tr:last-child td { border-bottom: 0; }
   .hero-float-card { right: 0; bottom: 12px; }
   .section-heading-row { display: block; }
   .section-heading-row > p { margin-top: 12px; }
-  .about-section { padding: 24px 20px; }
-  .clinic-details { grid-template-columns: 1fr; gap: 16px; }
-  .map-placeholder { grid-column: auto; }
   .doctor-grid, .service-category-grid { grid-template-columns: 1fr; }
   .doctor-card { padding: 21px; }
   .service-category-card { padding: 21px; }
@@ -791,16 +780,57 @@ tr:last-child td { border-bottom: 0; }
   .dentist-option-status { max-width: 92px; }
 }
 
-/* My Appointments: three side-by-side columns (Upcoming / Completed / Cancelled) */
+/* My Appointments: Upcoming | Past | Cancelled, three equal columns (same width as the original layout) */
 .appt-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
 .appt-column { min-width: 0; }
 .appt-column > h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--color-border-light); }
 .appt-count { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 999px; background: var(--color-border-light); color: var(--color-primary-dark); font-size: .78rem; font-weight: 700; }
 .appt-card { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
-.appt-card .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 @media (max-width: 900px) {
   .appt-board { grid-template-columns: 1fr; }
 }
+/* Appointment card, landscape layout (like the reference design).
+   The card is a size container and every size below uses cqw (1% of the card width) with a min and a max,
+   so the same layout shrinks to fit the narrow column and grows when the card is wider. */
+.appt-card { container-type: inline-size; gap: 8px; padding: 12px 14px; }
+/* Hover like the Our Doctors cards: the border changes color, with no zoom or lift. */
+.appt-card { border-color: var(--color-border); transition: border-color var(--transition-ui), box-shadow var(--transition-ui); }
+.appt-card:hover { border-color: #a8c2be; box-shadow: var(--shadow-card); transform: none; }
+.appt-actions-empty { visibility: hidden; }
+/* Footer of a cancelled card: same height as the button row, so all cards stay the same size. */
+.appt-note { display: flex; flex-direction: column; justify-content: center; min-height: clamp(32px, 10.5cqw, 46px); padding-top: clamp(6px, 2.4cqw, 12px); border-top: 1px solid var(--color-border-light); box-sizing: content-box; }
+.appt-note-title { color: var(--color-muted); font-size: clamp(.72rem, 3.6cqw, .94rem); font-weight: 700; line-height: 1.25; }
+.appt-note-text { margin-top: 2px; color: var(--color-muted); font-size: clamp(.64rem, 3.2cqw, .84rem); line-height: 1.25; }
+.appt-head { display: flex; align-items: center; gap: clamp(8px, 3cqw, 14px); padding-bottom: clamp(6px, 2.4cqw, 12px); border-bottom: 1px solid var(--color-border-light); }
+.appt-avatar { display: grid; flex: none; overflow: hidden; width: clamp(34px, 12cqw, 64px); height: clamp(34px, 12cqw, 64px); place-items: center; border-radius: clamp(10px, 3.8cqw, 18px); background: linear-gradient(145deg, #0b9185, #60c4ae); color: #fff; font-size: clamp(.74rem, 3.4cqw, 1.05rem); font-weight: 800; }
+.appt-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.appt-title { flex: 1 1 0; min-width: 0; }
+.appt-service { color: var(--color-primary-dark); font-size: clamp(.82rem, 4.4cqw, 1.2rem); font-weight: 800; line-height: 1.15; }
+.appt-dentist { margin-top: 1px; color: var(--color-muted); font-size: clamp(.7rem, 3.6cqw, .92rem); }
+.appt-head .badge { flex: none; align-self: flex-start; gap: 4px; min-height: clamp(20px, 6.5cqw, 26px); padding: 2px clamp(6px, 3cqw, 11px); font-size: clamp(.6rem, 3cqw, .78rem); white-space: nowrap; }
+.appt-head .badge svg { width: clamp(11px, 4cqw, 14px); height: clamp(11px, 4cqw, 14px); }
+.appt-when, .appt-payment { display: grid; grid-template-columns: 1fr 1fr; }
+.appt-when { padding: clamp(5px, 1.8cqw, 14px) clamp(9px, 3cqw, 20px); border-radius: clamp(10px, 4cqw, 16px); background: var(--color-primary-soft); }
+.appt-payment { padding: 0 clamp(2px, 1.5cqw, 6px) clamp(0px, .5cqw, 4px); }
+.appt-field { display: flex; align-items: center; gap: clamp(6px, 2.4cqw, 12px); min-width: 0; }
+.appt-field + .appt-field { padding-left: clamp(8px, 2.6cqw, 20px); }
+.appt-when .appt-field + .appt-field { border-left: 1px solid #cfe3de; }
+.appt-field > div { min-width: 0; }
+.appt-field-icon { display: grid; flex: none; place-items: center; color: var(--color-primary); }
+.appt-field-icon svg { width: clamp(14px, 5cqw, 20px); height: clamp(14px, 5cqw, 20px); }
+.appt-label { color: var(--color-muted); font-size: clamp(.5rem, 2.4cqw, .7rem); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.appt-value { margin-top: 0; color: var(--color-primary-dark); font-size: clamp(.66rem, 3.5cqw, .98rem); font-weight: 700; line-height: 1.15; }
+.appt-ref-row { display: flex; align-items: center; gap: 6px; }
+.appt-ref-row .appt-value { margin-top: 0; }
+/* nowrap keeps the reference code on one line instead of breaking after "DP-" */
+.appt-ref { white-space: nowrap; }
+.appt-copy { display: grid; flex: none; width: clamp(18px, 6cqw, 30px); height: clamp(18px, 6cqw, 30px); place-items: center; border: 0; border-radius: 8px; background: var(--color-primary-soft); color: var(--color-primary); cursor: pointer; transition: background-color var(--transition-ui), color var(--transition-ui); }
+.appt-copy svg { width: clamp(11px, 4cqw, 16px); height: clamp(11px, 4cqw, 16px); }
+.appt-copy:hover { background: #d3ebe6; }
+.appt-copy.copied { background: var(--color-primary); color: #fff; }
+.appt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(6px, 2.6cqw, 10px); padding-top: clamp(6px, 2.4cqw, 12px); border-top: 1px solid var(--color-border-light); }
+.appt-actions .btn { min-height: clamp(32px, 10.5cqw, 46px); margin: 0; padding: 0 8px; border-radius: clamp(10px, 3.5cqw, 14px); font-size: clamp(.74rem, 3.6cqw, .94rem); }
+.appt-actions .btn svg { width: clamp(13px, 4.6cqw, 18px); height: clamp(13px, 4.6cqw, 18px); }
 .service-form { scroll-margin-top: 100px; }
 
 /* ===== Shared page header (Admin, Book, My Appointments) ===== */
@@ -964,7 +994,6 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
 .pw-rule .rule-icon { display: grid; flex: none; width: 18px; height: 18px; place-items: center; border-radius: 50%; }
 .pw-rule .rule-icon svg { width: 18px; height: 18px; }
 .pw-rule .rule-text { flex: 1; }
-.pw-rule .rule-count { font-variant-numeric: tabular-nums; font-size: .78rem; opacity: .85; }
 .pw-rule.met { color: var(--color-primary); }
 .pw-rule.met .rule-icon { background: var(--color-primary); color: #fff; }
 .pw-rule.met .rule-icon svg { width: 12px; height: 12px; }
@@ -1022,6 +1051,8 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
 .consent-hint { margin: 10px 0 0; }
 .privacy-notice p { margin: 0 0 12px; }
 .privacy-notice { margin-bottom: 8px; }
+/* Booking form card: no hover lift or zoom, same as the "Before your visit" card below it. */
+.booking-card:hover { border-color: var(--color-border-light); box-shadow: var(--shadow-card); transform: none; }
 .policy-card { margin-top: 24px; padding: 24px; border: 1px solid var(--color-border-light); border-radius: var(--radius-card); background: var(--color-surface); box-shadow: var(--shadow-card); }
 .policy-card h2 { margin: 0 0 16px; font-size: 1.25rem; }
 .policy-groups { display: grid; gap: 22px; }
@@ -1059,7 +1090,6 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
 .social-btn svg { flex: none; width: 22px; height: 22px; }
 .social-btn:hover { background: var(--color-soft); box-shadow: 0 2px 8px rgba(16, 63, 66, .12); }
 .social-btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
-
 
 /* Legal pages (data deletion, privacy) */
 .legal-page { max-width: 720px; margin: 0 auto; padding: 8px 0 40px; color: var(--color-text); }
@@ -1117,7 +1147,6 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
 /* Phones: action buttons sit on the right side of their card */
 @media (max-width: 700px) {
   .svc-card .actions { justify-content: flex-end; }
-  .appt-card .actions { justify-content: flex-end; }
 
   .sched-card > .btn { display: block; width: fit-content; margin-left: auto; }
 }

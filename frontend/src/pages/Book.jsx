@@ -147,7 +147,7 @@ export default function Book() {
   return (
     <>
       <PageHeader eyebrow="New booking" title="Book an Appointment" subtitle="Pick a dentist, service, and a time that works for you." />
-      <div className="card">
+      <div className="card booking-card">
         {loadErr && <p className="error" role="alert">Could not load the booking options: {loadErr}</p>}
         <label>1. Service
           <select name="service" value={serviceId} onChange={(e) => selectService(e.target.value)}>
