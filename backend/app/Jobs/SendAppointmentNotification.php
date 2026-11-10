@@ -83,7 +83,15 @@ class SendAppointmentNotification
                . "SmileBook Dental Clinic";
 
         // Short version for SMS (keeps the message cheap and within one or two texts)
-        $msg = "SmileBook: Dear {$a->user->name}, your {$a->service->name} with {$a->dentist->name} on {$date} at {$start} is {$this->event}. Ref #{$a->id}.";
+        $smsStatus = match (true) {
+            $this->event === 'approved'    => 'has been approved',
+            $this->event === 'rescheduled' => $a->status === 'pending'
+                ? 'has been rescheduled and is awaiting approval'
+                : 'has been rescheduled',
+            $this->event === 'cancelled'   => 'has been cancelled',
+            default                        => 'has been received and is awaiting approval',
+        };
+        $msg = "SmileBook: Dear {$a->user->name}, your {$a->service->name} with {$a->dentist->name} on {$date} at {$start} {$smsStatus}. Ref #{$a->id}.";
 
         // Email and SMS are independent: if one fails, the other still goes out.
         try {

@@ -1,8 +1,27 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../PageHeader'
-import api, { errMsg, to12h, toYMD } from '../api'
+import api, { errMsg, to12h, toYMD, formatDate, statusLabel } from '../api'
 import Modal, { ConfirmModal } from '../Modal'
 import SlotPicker from './SlotPicker'
+
+// Defined outside MyAppointments so React does not remount every row on each render.
+function Row({ a, actions, busy, cancellingId, onReschedule, onCancel }) {
+  return (
+    <div className="card row appt-card">
+      <div>
+        <b>{a.service.name}</b> with {a.dentist.name}<br />
+        {formatDate(a.date)} · {to12h(a.start_time)} – {to12h(a.end_time)}<br />
+        <span className={`badge ${a.status}`}>{statusLabel(a.status)}</span> <small className="muted">Down payment ₱{Number(a.down_payment)} · {a.payment_ref}</small>
+      </div>
+      {actions && <div className="actions">
+        <button className="btn small" onClick={() => onReschedule(a)}>Reschedule</button>
+        <button className="btn small danger" disabled={busy} onClick={() => onCancel(a)}>
+          {cancellingId === a.id ? 'Cancelling...' : 'Cancel'}
+        </button>
+      </div>}
+    </div>
+  )
+}
 
 export default function MyAppointments() {
   const [list, setList] = useState([])
@@ -16,8 +35,9 @@ export default function MyAppointments() {
   const [err, setErr] = useState('')
   const [modalErr, setModalErr] = useState('')
 
-  const load = async () => {
-    setLoading(true)
+  // The "Loading..." screen only shows on the first load, so the board does not flash after a cancel or reschedule.
+  const load = async (first = false) => {
+    if (first) setLoading(true)
     try {
       const { data } = await api.get('/appointments')
       setList(data)
@@ -27,7 +47,7 @@ export default function MyAppointments() {
       setLoading(false)
     }
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(true) }, [])
 
   const cancel = async (id) => {
     setCancellingId(id)
@@ -56,21 +76,8 @@ export default function MyAppointments() {
   const completed = list.filter((a) => (a.date < today || a.status === 'done') && a.status !== 'cancelled')
   const cancelled = list.filter((a) => a.status === 'cancelled')
 
-  const Row = ({ a, actions }) => (
-    <div className="card row appt-card">
-      <div>
-        <b>{a.service.name}</b> with {a.dentist.name}<br />
-        {a.date} · {to12h(a.start_time)} – {to12h(a.end_time)}<br />
-        <span className={`badge ${a.status}`}>{a.status}</span> <small className="muted">Down payment ₱{Number(a.down_payment)} · {a.payment_ref}</small>
-      </div>
-      {actions && <div className="actions">
-        <button className="btn small" onClick={() => { setEditing(a); setDate(''); setTime(''); setModalErr('') }}>Reschedule</button>
-        <button className="btn small danger" disabled={cancellingId !== null} onClick={() => setCancelTarget(a)}>
-          {cancellingId === a.id ? 'Cancelling...' : 'Cancel'}
-        </button>
-      </div>}
-    </div>
-  )
+  const startReschedule = (a) => { setEditing(a); setDate(''); setTime(''); setModalErr('') }
+  const rowProps = { busy: cancellingId !== null, cancellingId, onReschedule: startReschedule, onCancel: setCancelTarget }
 
   return (
     <>
@@ -81,17 +88,17 @@ export default function MyAppointments() {
           <section className="appt-column" aria-labelledby="appt-upcoming">
             <h3 id="appt-upcoming">Upcoming <span className="appt-count">{upcoming.length}</span></h3>
             {upcoming.length === 0 && <p className="muted">No upcoming appointments.</p>}
-            {upcoming.map((a) => <Row key={a.id} a={a} actions />)}
+            {upcoming.map((a) => <Row key={a.id} a={a} actions {...rowProps} />)}
           </section>
           <section className="appt-column" aria-labelledby="appt-completed">
             <h3 id="appt-completed">Past <span className="appt-count">{completed.length}</span></h3>
             {completed.length === 0 && <p className="muted">No past appointments.</p>}
-            {completed.map((a) => <Row key={a.id} a={a} />)}
+            {completed.map((a) => <Row key={a.id} a={a} {...rowProps} />)}
           </section>
           <section className="appt-column" aria-labelledby="appt-cancelled">
             <h3 id="appt-cancelled">Cancelled <span className="appt-count">{cancelled.length}</span></h3>
             {cancelled.length === 0 && <p className="muted">No cancelled appointments.</p>}
-            {cancelled.map((a) => <Row key={a.id} a={a} />)}
+            {cancelled.map((a) => <Row key={a.id} a={a} {...rowProps} />)}
           </section>
         </div>
       )}
@@ -109,7 +116,7 @@ export default function MyAppointments() {
       {cancelTarget && (
         <ConfirmModal
           title="Cancel appointment?"
-          message={`Cancel your ${cancelTarget.service.name} appointment with ${cancelTarget.dentist.name} on ${cancelTarget.date}?`}
+          message={`Cancel your ${cancelTarget.service.name} appointment with ${cancelTarget.dentist.name} on ${formatDate(cancelTarget.date)}?`}
           confirmLabel="Cancel appointment"
           cancelLabel="Keep appointment"
           busyLabel="Cancelling..."

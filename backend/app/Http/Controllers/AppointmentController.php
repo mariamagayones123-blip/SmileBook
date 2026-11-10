@@ -133,6 +133,11 @@ class AppointmentController extends Controller
         }
         abort_if($appointment->status === 'done', 422, 'This appointment is already done.');
 
+        // Nothing to change (e.g. approving twice): do not update again and do not send another email.
+        if ($appointment->status === $r->status) {
+            return $appointment->load(['dentist', 'service', 'user']);
+        }
+
         if ($appointment->status === 'cancelled' && $r->status !== 'cancelled') {
             // Bringing a cancelled appointment back: its slot may have been booked by someone else meanwhile.
             try {

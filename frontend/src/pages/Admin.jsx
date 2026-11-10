@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import api, { DAY_NAMES, errMsg, to12h, toClinicTime } from '../api'
+import api, { DAY_NAMES, errMsg, to12h, toClinicTime, statusLabel } from '../api'
 import Modal, { ConfirmModal } from '../Modal'
 import SlotPicker from './SlotPicker'
 import { categoryForService, SERVICE_CATEGORIES } from '../serviceCategories'
@@ -162,7 +162,7 @@ function Appointments() {
                 <td data-label="Service">{a.service.name}</td>
                 <td data-label="Date & time"><b className="strong-line">{fmtDate(a.date)}</b><small>{to12h(a.start_time)} – {to12h(a.end_time)}</small></td>
                 <td data-label="Payment"><b className="strong-line">₱{Number(a.down_payment)}</b><small className="mono">{a.payment_ref}</small></td>
-                <td data-label="Status"><span className={`badge ${a.status}`}><i className="dot" />{a.status}</span></td>
+                <td data-label="Status"><span className={`badge ${a.status}`}><i className="dot" />{statusLabel(a.status)}</span></td>
                 <td data-label="Actions">
                   <div className="row-actions">
                     {a.status === 'pending' && <button className="btn small" disabled={actionBusyId !== null} onClick={() => setStatus(a.id, 'approved')}>

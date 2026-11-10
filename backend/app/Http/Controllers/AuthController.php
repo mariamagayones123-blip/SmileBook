@@ -201,14 +201,21 @@ class AuthController extends Controller
 
         $user = User::where($column, $profile['id'])->first();
         $isNew = false;
+        $foundByEmail = false;
         if (!$user) {
             $user = $this->findUserByEmail($email);
+            $foundByEmail = (bool) $user;
             $isNew = !$user;
         }
 
         // Admin accounts must use email + password (checked before anything is linked or saved).
         if ($user && $user->role !== 'patient') {
             $this->socialFail('This account must log in with email and password.');
+        }
+
+        // Facebook does not guarantee the email is verified, so never attach it to an existing account.
+        if ($foundByEmail && $provider === 'facebook') {
+            $this->socialFail('An account with this email already exists. Please log in with your email and password or with Google.');
         }
 
         if ($isNew) {
@@ -220,7 +227,7 @@ class AuthController extends Controller
                 $column => $profile['id'],
             ]);
         } elseif ($user->{$column} !== $profile['id']) {
-            // Same email as an existing account: connect this Google/Facebook login to it.
+            // Same email as an existing account: connect this Google login to it (Google verifies the email).
             $user->forceFill([$column => $profile['id']])->save();
         }
 

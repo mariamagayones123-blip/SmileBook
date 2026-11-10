@@ -8,9 +8,9 @@ const clinicInfo = {
   smsEnabled: false,
   email: 'smilebook4dental@gmail.com',
   facebookUrl: 'https://www.facebook.com/smilebook4dental',
-  // DEMO MODE: demo: true = pekeng QR at "Demo only" na payment (para sa school project / testing).
-  // Para sa totoong bayad: gawing false ang demo at ilagay ang totoong accountName at accountNumber.
-  // Para sa QR ng totoong account: ilagay ang larawan sa frontend/public/payment-qr.png at gawing '/payment-qr.png' ang qrImage.
+  // DEMO MODE: demo: true shows a fake QR and a "Demo only" payment (for the school project / testing).
+  // For real payments: set demo to false and enter the real accountName and accountNumber.
+  // For the QR of a real account: put the image in frontend/public/payment-qr.png and set qrImage to '/payment-qr.png'.
   payment: {
     demo: true,
     method: 'GCash',

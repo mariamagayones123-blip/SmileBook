@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import PageHeader from '../PageHeader'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import api, { errMsg, to12h } from '../api'
+import api, { errMsg, to12h, formatDate } from '../api'
 import { useToast } from '../Toast'
 import { useAuth } from '../authContext'
 import Modal from '../Modal'
@@ -242,7 +242,7 @@ export default function Book() {
             <p className="center"><b>Ref: {demoRef}</b></p>
             <ul className="summary">
               <li>{dentist?.name}</li><li>{service?.name}</li>
-              <li>{date} at {time && to12h(time)}</li>
+              <li>{formatDate(date)} at {time && to12h(time)}</li>
             </ul>
             <button className="btn" disabled={busy} onClick={confirmBooking}>{busy ? 'Booking...' : 'Confirm demo booking'}</button>
             <button className="btn ghost" onClick={() => setShowPay(false)}>Cancel</button>
@@ -266,7 +266,7 @@ export default function Book() {
             </dl>
             <ul className="summary">
               <li>{dentist?.name}</li><li>{service?.name}</li>
-              <li>{date} at {time && to12h(time)}</li>
+              <li>{formatDate(date)} at {time && to12h(time)}</li>
             </ul>
             <label>{clinicInfo.payment.method} reference number
               <input

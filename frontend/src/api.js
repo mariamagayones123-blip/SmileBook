@@ -49,6 +49,16 @@ export const to12h = (t) => {
 // Same as to12h, but noon is shown as "12:00 NN" (used for clinic / Saturday closing time)
 export const toClinicTime = (t) => (t === '12:00' ? '12:00 NN' : to12h(t))
 
+// "2026-11-12" -> "November 12, 2026" (same style as the emails)
+export const formatDate = (ymd) => {
+  if (!ymd) return ''
+  const [y, m, d] = String(ymd).slice(0, 10).split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+// "pending" -> "Pending approval", "approved" -> "Approved" (same wording as the emails)
+export const statusLabel = (s) => (s === 'pending' ? 'Pending approval' : s ? s.charAt(0).toUpperCase() + s.slice(1) : '')
+
 export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default api

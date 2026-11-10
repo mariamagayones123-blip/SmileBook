@@ -170,7 +170,7 @@ class AppointmentBookingTest extends TestCase
         $this->book($this->patient())->assertCreated();
 
         Http::assertSent(fn ($req) => $req->url() === 'https://api.semaphore.co/api/v4/messages'
-            && $req['number'] === '09171234567' && str_contains($req['message'], 'booked (pending approval)'));
+            && $req['number'] === '09171234567' && str_contains($req['message'], 'has been received and is awaiting approval'));
         $this->assertCount(1, Mail::mailer('array')->getSymfonyTransport()->messages());
     }
 
