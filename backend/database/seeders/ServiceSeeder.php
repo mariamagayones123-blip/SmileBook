@@ -11,28 +11,28 @@ class ServiceSeeder extends Seeder
     {
         // [name, category, description, price]. Order matters: on a fresh database the first one gets ID 1.
         $services = [
-            ['Teeth Cleaning', 'General & Preventive', 'Removal of plaque, tartar, and surface stains to help maintain healthy teeth and gums.', 800],
-            ['Tooth Extraction', 'Oral Surgery', 'Simple extraction', 1200],
-            ['Braces Check-up', 'Orthodontics', 'Monthly adjustment', 1000],
-            ['Dental Check-up', 'General & Preventive', 'Examination of the teeth and gums to assess oral health and identify potential dental problems.', 500],
-            ['Tooth Filling', 'General & Preventive', 'Restoration of a decayed or damaged tooth using composite resin filling material.', 1000],
-            ['Alveoloplasty', 'Oral Surgery', 'Smoothing and reshaping the jawbone, often before dentures.', 5000],
-            ['Retained Root Removal', 'Oral Surgery', 'Removal of a remaining tooth-root fragment when indicated.', 2500],
-            ['Metal Braces Installation', 'Orthodontics', 'Installation of traditional metal braces to help correct teeth alignment and bite problems.', 30000],
-            ['Braces Adjustment', 'Orthodontics', 'Routine adjustment of braces to monitor and guide teeth movement during treatment.', 1000],
-            ['Complete Dentures', 'General & Preventive', 'Replaces all missing teeth in the upper or lower jaw.', 15000],
-            ['Fluoride Treatment', 'General & Preventive', 'Helps strengthen tooth enamel and prevent tooth decay.', 800],
-            ['Jacket / Porcelain Crown', 'General & Preventive', 'Covers and protects damaged teeth while restoring their shape and appearance.', 15000],
-            ['Retainers', 'Orthodontics', 'Keeps teeth in their proper position after braces.', 3000],
-            ['Ceramic Braces Installation', 'Orthodontics', 'Installs tooth-colored braces to correct teeth alignment.', 40000],
-            ['Clear Aligners', 'Orthodontics', 'Uses transparent trays to gradually straighten teeth.', 80000],
-            ['Wisdom Tooth Removal', 'Oral Surgery', 'Removes wisdom teeth that cause pain or other dental problems.', 5000],
-            ['Surgical Tooth Extraction', 'Oral Surgery', 'Removes teeth that cannot be extracted through simple extraction.', 3500],
-            ['Impacted Tooth Removal', 'Oral Surgery', 'Surgically removes a tooth that is trapped beneath the gums.', 8000],
+            ['Teeth Cleaning', 'General & Preventive', 'Professional cleaning removes stains and tartar for a brighter, healthier smile.', 800],
+            ['Tooth Extraction', 'Oral Surgery', 'A damaged tooth is gently removed and the area heals cleanly.', 1200],
+            ['Braces Check-up', 'Orthodontics', 'Check-ups track your progress and make sure your braces are working as planned.', 1000],
+            ['Dental Check-up', 'General & Preventive', 'A thorough exam spots plaque, cavities and gum problems early, so treatment can start before they get worse.', 500],
+            ['Tooth Filling', 'General & Preventive', 'A cavity is cleaned and restored so the tooth looks and feels natural again.', 1000],
+            ['Alveoloplasty', 'Oral Surgery', 'The jawbone ridge is smoothed and reshaped so the area heals well and fits dentures comfortably.', 5000],
+            ['Retained Root Removal', 'Oral Surgery', 'Leftover tooth roots are removed to prevent infection and let the gum heal cleanly.', 2500],
+            ['Metal Braces Installation', 'Orthodontics', 'Braces gradually guide crooked or crowded teeth into a straighter, aligned smile.', 30000],
+            ['Braces Adjustment', 'Orthodontics', 'Regular adjustments keep the right tension on your braces so teeth keep moving toward their final position.', 1000],
+            ['Complete Dentures', 'General & Preventive', 'Full dentures replace missing teeth so you can chew, speak and smile with confidence.', 15000],
+            ['Fluoride Treatment', 'General & Preventive', 'A fluoride coating strengthens enamel and helps protect teeth from cavities.', 800],
+            ['Jacket / Porcelain Crown', 'General & Preventive', 'A porcelain crown covers a damaged tooth and restores its shape, strength and natural look.', 15000],
+            ['Retainers', 'Orthodontics', 'Retainers hold your teeth in their new position after treatment so they stay straight.', 3000],
+            ['Ceramic Braces Installation', 'Orthodontics', 'Tooth-colored ceramic braces straighten your teeth while blending in with your smile.', 40000],
+            ['Clear Aligners', 'Orthodontics', 'Removable clear aligners gradually move your teeth into place without metal brackets or wires.', 80000],
+            ['Wisdom Tooth Removal', 'Oral Surgery', 'A painful or crowded wisdom tooth is taken out so the gum can heal and nearby teeth stay healthy.', 5000],
+            ['Surgical Tooth Extraction', 'Oral Surgery', 'A broken or hard-to-reach tooth is removed through a small surgical opening so the area can heal well.', 3500],
+            ['Impacted Tooth Removal', 'Oral Surgery', 'A tooth stuck under the gum or bone is carefully removed to relieve pain and prevent infection.', 8000],
         ];
 
         foreach ($services as [$name, $category, $description, $price]) {
-            Service::firstOrCreate(
+            $service = Service::firstOrCreate(
                 ['name' => $name],
                 [
                     'category' => $category,
@@ -40,6 +40,12 @@ class ServiceSeeder extends Seeder
                     'price' => $price,
                 ]
             );
+
+            // Keep the description the same as the Before & After section.
+            // Only the description is updated here, so prices and categories you changed stay as they are.
+            if ($service->description !== $description) {
+                $service->update(['description' => $description]);
+            }
         }
     }
 }
