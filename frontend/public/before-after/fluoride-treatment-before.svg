@@ -24,5 +24,4 @@
 <rect x="406.5" y="383" width="32" height="64" rx="10" fill="#e8e5d6" stroke="#00000020" stroke-width="1.5" transform="rotate(0 422.5 415.0)"/>
 <ellipse cx="177.5" cy="402" rx="9" ry="4" fill="#ffffff" opacity=".85"/><ellipse cx="247.5" cy="420" rx="8" ry="4" fill="#ffffff" opacity=".85"/><ellipse cx="317.5" cy="400" rx="10" ry="4" fill="#ffffff" opacity=".85"/><ellipse cx="387.5" cy="424" rx="9" ry="4" fill="#ffffff" opacity=".85"/><ellipse cx="212.5" cy="430" rx="7" ry="3" fill="#ffffff" opacity=".85"/><ellipse cx="352.5" cy="404" rx="8" ry="3" fill="#ffffff" opacity=".85"/></g>
 </g>
-<rect x="90" y="690" width="420" height="40" rx="20" fill="#ffffffcc"/><text x="300" y="716" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="700" fill="#5e7475" letter-spacing="1">SAMPLE IMAGE · REPLACE WITH YOUR PHOTO</text>
 </svg>

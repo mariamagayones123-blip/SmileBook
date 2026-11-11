@@ -24,5 +24,4 @@
 <rect x="406.5" y="383" width="32" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(0 422.5 415.0)"/>
 <path d="M155 395 Q155 378 175 378 L425 378 Q445 378 445 395 L445 448 Q300 462 155 448Z" fill="#8fd3e8" opacity=".28" stroke="#5fb4cf" stroke-width="2.5"/><path d="M170 390 L430 390" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity=".7"/></g>
 </g>
-<rect x="90" y="690" width="420" height="40" rx="20" fill="#ffffffcc"/><text x="300" y="716" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="700" fill="#5e7475" letter-spacing="1">SAMPLE IMAGE · REPLACE WITH YOUR PHOTO</text>
 </svg>
