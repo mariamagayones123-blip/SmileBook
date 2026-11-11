@@ -21,7 +21,6 @@
 <rect x="336.5" y="383" width="32.0" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(0 352.5 415.0)"/>
 <rect x="371.5" y="383" width="32.0" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(0 387.5 415.0)"/>
 <rect x="406.5" y="383" width="32.0" height="64" rx="10" fill="#fbfbf6" stroke="#00000020" stroke-width="1.5" transform="rotate(0 422.5 415.0)"/>
-<ellipse cx="282.5" cy="428" rx="13" ry="10" fill="#7a5a3a"/><ellipse cx="282.5" cy="425" rx="7" ry="5" fill="#4a3322"/><ellipse cx="282.5" cy="420" rx="22" ry="16" fill="#d9626b" opacity=".6"/></g>
+<ellipse cx="282.5" cy="395" rx="13" ry="10" fill="#7a5a3a"/><ellipse cx="282.5" cy="392" rx="7" ry="5" fill="#4a3322"/><ellipse cx="282.5" cy="388" rx="22" ry="16" fill="#d9626b" opacity=".6"/></g>
 </g>
-<rect x="90" y="690" width="420" height="40" rx="20" fill="#ffffffcc"/><text x="300" y="716" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="700" fill="#5e7475" letter-spacing="1">SAMPLE IMAGE · REPLACE WITH YOUR PHOTO</text>
 </svg>
