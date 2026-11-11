@@ -18,6 +18,13 @@ const DOWN_PAYMENT = clinicInfo.payment.amount
 const DEMO = clinicInfo.payment.demo
 const REF_RE = /^[A-Za-z0-9-]{6,30}$/
 
+// "2026-11-12" -> "Thu, Nov 12" (short form for the sticky summary bar)
+const shortDate = (ymd) => {
+  if (!ymd) return ''
+  const [y, m, d] = String(ymd).slice(0, 10).split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
 // Doctor's profile photo (from /public/doctors). Falls back to a user icon if there is no photo.
 function DentistAvatar({ name }) {
   const photo = doctorPhoto(name)
@@ -71,6 +78,8 @@ export default function Book() {
   const ready = dentistId && serviceId && date && time
   // Progress shown at the top: 1 = service, 2 = dentist, 3 = date and time
   const step = !serviceId ? 1 : !dentistId ? 2 : 3
+  // Sticky summary (phones/tablets): what the patient has picked so far
+  const whenText = date ? `${shortDate(date)}${time ? ` · ${timeEnd ? `${to12h(time)} – ${to12h(timeEnd)}` : to12h(time)}` : ''}` : ''
 
   // When a doctor is locked in, the patient only sees the services that doctor can do.
   const offeredServices = useMemo(
@@ -344,6 +353,23 @@ export default function Book() {
           <button className="btn bk-continue" disabled={!ready || !consent || busy || (needsPhone && !phoneOk)} onClick={goToPayment}>Continue to Down Payment →</button>
           {ready && !consent && <p className="muted consent-hint"><small>Please tick the box above to continue.</small></p>}
         </section>
+
+        {service && !showPay && (
+          <aside className="bk-summary" aria-label="Your booking summary">
+            <div className="bk-sum-row">
+              <span className="bk-sum-label">Service</span>
+              <span className="bk-sum-value"><b>{service.name}</b> <span className="bk-sum-price">₱{Number(service.price).toLocaleString()}</span></span>
+            </div>
+            <div className="bk-sum-row">
+              <span className="bk-sum-label">Dentist</span>
+              <span className={`bk-sum-value${dentist ? '' : ' empty'}`}>{dentist ? dentist.name : 'Not selected yet'}</span>
+            </div>
+            <div className="bk-sum-row">
+              <span className="bk-sum-label">Schedule</span>
+              <span className={`bk-sum-value${whenText ? '' : ' empty'}`}>{whenText || 'Not selected yet'}</span>
+            </div>
+          </aside>
+        )}
       </div>
 
       <AppointmentPolicies />
