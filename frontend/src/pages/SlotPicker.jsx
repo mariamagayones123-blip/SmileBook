@@ -12,7 +12,7 @@ const parseYMD = (ymd) => {
 
 // Calendar (left) + time slots (right) for one dentist.
 // Days before today + 2 and days the dentist does not work are disabled.
-export default function SlotPicker({ dentistId, dentistWorkDays, date, setDate, time, setTime, exclude, refreshKey }) {
+export default function SlotPicker({ dentistId, dentistWorkDays, date, setDate, time, setTime, setTimeEnd, exclude, refreshKey }) {
   const [slots, setSlots] = useState([])
   const [err, setErr] = useState('')
   const [loading, setLoading] = useState(false)
@@ -116,7 +116,7 @@ export default function SlotPicker({ dentistId, dentistWorkDays, date, setDate, 
                 disabled={loading || !s.available}
                 className={'sp-slot' + (time === s.start ? ' on' : '')}
                 aria-pressed={time === s.start}
-                onClick={() => setTime(s.start)}
+                onClick={() => { setTime(s.start); if (setTimeEnd) setTimeEnd(s.end) }}
               >
                 <span className="sp-slot-time">{to12h(s.start)} – {to12h(s.end)}</span>
                 <span className="sp-slot-state">{!s.available ? 'Unavailable' : time === s.start ? 'Selected' : 'Available'}</span>
