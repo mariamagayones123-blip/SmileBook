@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import PageHeader from '../PageHeader'
+import { useEffect, useMemo, useState } from 'react'
+import Icon from '../Icons'
+import doctorPhoto from '../doctorPhotos'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import api, { errMsg, to12h, formatDate } from '../api'
@@ -9,6 +10,7 @@ import Modal from '../Modal'
 import clinicInfo from '../clinicInfo'
 import AppointmentPolicies from './AppointmentPolicies'
 import SlotPicker from './SlotPicker'
+import ServiceSelect from '../ServiceSelect'
 import { categoryForService, SERVICE_CATEGORIES } from '../serviceCategories'
 
 const DOWN_PAYMENT = clinicInfo.payment.amount
@@ -16,12 +18,24 @@ const DOWN_PAYMENT = clinicInfo.payment.amount
 const DEMO = clinicInfo.payment.demo
 const REF_RE = /^[A-Za-z0-9-]{6,30}$/
 
+// Doctor's profile photo (from /public/doctors). Falls back to a user icon if there is no photo.
+function DentistAvatar({ name }) {
+  const photo = doctorPhoto(name)
+  return (
+    <span className="bk-avatar">
+      {photo ? <img src={photo} alt="" loading="lazy" /> : <Icon name="user" size={20} />}
+    </span>
+  )
+}
+
 export default function Book() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const nav = useNavigate()
   const [dentists, setDentists] = useState([])
   const [services, setServices] = useState([])
   const [dentistId, setDentistId] = useState(params.get('dentist') || '')
+  // Came from a doctor's "Book with ..." button: the doctor is locked in and only their services are offered.
+  const [doctorLocked, setDoctorLocked] = useState(!!params.get('dentist'))
   const [serviceId, setServiceId] = useState(params.get('service') || '')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
@@ -54,6 +68,43 @@ export default function Book() {
       || (serviceOption.dentist_ids || []).some((id) => String(id) === String(dentistOption.id))
   }
   const ready = dentistId && serviceId && date && time
+  // Progress shown at the top: 1 = service, 2 = dentist, 3 = date and time
+  const step = !serviceId ? 1 : !dentistId ? 2 : 3
+
+  // When a doctor is locked in, the patient only sees the services that doctor can do.
+  const offeredServices = useMemo(
+    () => (doctorLocked && dentist ? services.filter((s) => dentistOffersService(dentist, s)) : services),
+    [doctorLocked, dentist, services]
+  )
+  // Groups for the service dropdown: one group per category, skipping empty ones.
+  const serviceGroups = useMemo(
+    () => SERVICE_CATEGORIES
+      .map((category) => ({
+        label: category,
+        options: offeredServices
+          .filter((s) => categoryForService(s) === category)
+          .map((s) => ({ value: s.id, label: s.name, price: s.price })),
+      }))
+      .filter((g) => g.options.length),
+    [offeredServices]
+  )
+
+  // Wrong or old ?dentist= link: fall back to the normal flow instead of showing an empty form.
+  useEffect(() => {
+    if (doctorLocked && dentists.length && !dentist) {
+      setDoctorLocked(false)
+      setDentistId('')
+    }
+  }, [doctorLocked, dentists, dentist])
+
+  const unlockDoctor = () => {
+    setDoctorLocked(false)
+    setDentistId('')
+    setDate('')
+    setTime('')
+    setSelectionHint('')
+    setParams({}, { replace: true })
+  }
 
   const selectService = (value) => {
     const nextService = services.find((option) => String(option.id) === value)
@@ -72,12 +123,8 @@ export default function Book() {
     }
   }
 
-  const doctorReason = (option) => {
-    const specialtyText = option.specialty.toLowerCase().includes('general')
-      ? 'General Dentistry only'
-      : option.specialty
-    return `${option.name}: ${specialtyText}. Can't perform ${service.name}.`
-  }
+  // Short, formal note shown on a dentist card that cannot do the chosen service.
+  const doctorReason = () => 'This dentist does not provide the selected service.'
 
   const chooseDentist = (option) => {
     if (!service || !dentistOffersService(option, service)) return
@@ -106,12 +153,18 @@ export default function Book() {
     const selectedDentist = dentists.find((option) => String(option.id) === String(dentistId))
     const selectedService = services.find((option) => String(option.id) === String(serviceId))
     if (selectedDentist && selectedService && !dentistOffersService(selectedDentist, selectedService)) {
+      if (doctorLocked) {
+        // e.g. an old ?service= link that this doctor does not offer: keep the doctor, clear the service
+        setServiceId('')
+        setSelectionHint(`${selectedDentist.name} does not offer that service. Choose one from the list below.`)
+        return
+      }
       setDentistId('')
       setDate('')
       setTime('')
       setSelectionHint('Your previously selected doctor does not offer this service. Choose an eligible doctor below.')
     }
-  }, [dentistId, serviceId, dentists, services])
+  }, [dentistId, serviceId, dentists, services, doctorLocked])
 
   const goToPayment = async () => {
     if (needsPhone) {
@@ -146,30 +199,74 @@ export default function Book() {
 
   return (
     <>
-      <PageHeader eyebrow="New booking" title="Book an Appointment" subtitle="Pick a dentist, service, and a time that works for you." />
-      <div className="card booking-card">
+      <div className="card booking-card bk">
+        <header className="bk-head">
+          <div className="bk-head-row">
+            <h1 className="bk-title">Book an Appointment</h1>
+            <span className="bk-step-pill">Step {step} of 3</span>
+          </div>
+          <div className="bk-progress" role="progressbar" aria-label="Booking progress" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step}>
+            {[1, 2, 3].map((n) => <span key={n} className={n <= step ? 'on' : ''} />)}
+          </div>
+          <p className="bk-sub">Select your service, dentist, and preferred schedule.</p>
+        </header>
+
         {loadErr && <p className="error" role="alert">Could not load the booking options: {loadErr}</p>}
-        <label>1. Service
-          <select name="service" value={serviceId} onChange={(e) => selectService(e.target.value)}>
-            <option value="">-- choose a service --</option>
-            {SERVICE_CATEGORIES.map((category) => (
-              <optgroup key={category} label={category}>
-                {services.filter((s) => categoryForService(s) === category).map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} – ₱{Number(s.price).toLocaleString()}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
-        {selectionHint && <p className="booking-selection-hint" role="status">{selectionHint}</p>}
-        <fieldset className={`dentist-picker${!service ? ' is-locked' : ''}`} aria-describedby="dentist-picker-hint">
-          <legend>2. Choose a dentist</legend>
-          <p id="dentist-picker-hint" className="muted"><small>{service ? 'Doctors who cannot provide this service are shown with a reason and cannot be selected.' : 'Select a service to view available dentists.'}</small></p>
-          {!service && dentist && <p className="preselected-dentist">Preselected from your link: <b>{dentist.name}</b>. Select a service to check eligibility.</p>}
-          {!service && <p className="dentist-picker-prompt">Select a service to view available dentists.</p>}
-          {service && dentists.length === 0 && <p className="muted">No doctors are available right now.</p>}
-          {service && dentists.length > 0 && (
-            <div className="dentist-options" role="radiogroup" aria-label="Choose a dentist">
+
+        <section className="bk-section" aria-labelledby="bk-h-service">
+          <h2 id="bk-h-service" className="bk-h"><span className="bk-num">01</span> — Select a Service</h2>
+          <div className="bk-service-card">
+            <div className="bk-service-label">
+              <span className="bk-kicker">Dental Service</span>
+              <ServiceSelect
+                value={serviceId}
+                onChange={selectService}
+                groups={serviceGroups}
+              />
+            </div>
+            {service ? (
+              <div className="bk-service-summary">
+                <div className="bk-service-meta">
+                  <span className="bk-chip">{categoryForService(service)}</span>
+                  {service.description && <p>{service.description}</p>}
+                </div>
+                <span className="bk-price">₱{Number(service.price).toLocaleString()}</span>
+              </div>
+            ) : (
+              <p className="bk-hint">Choose a service to see dentists who can perform it.</p>
+            )}
+          </div>
+          {doctorLocked && dentist && (
+            <p className="bk-note">
+              {offeredServices.length
+                ? `Showing only the services offered by ${dentist.name}.`
+                : `${dentist.name} has no services listed yet. Please choose another doctor.`}
+            </p>
+          )}
+          {selectionHint && <p className="booking-selection-hint" role="status">{selectionHint}</p>}
+        </section>
+
+        <section className="bk-section" aria-labelledby="bk-h-dentist">
+          <h2 id="bk-h-dentist" className="bk-h"><span className="bk-num">02</span> — Choose Your Dentist</h2>
+          <p className="bk-sub">{doctorLocked ? 'You are booking with this dentist.' : 'Select an available dentist for your chosen service.'}</p>
+          {doctorLocked && dentist ? (
+            <div className="bk-dentist selected">
+              <DentistAvatar name={dentist.name} />
+              <span className="bk-dentist-body">
+                <b>{dentist.name}</b>
+                <span className="bk-dentist-spec">{dentist.specialty}</span>
+              </span>
+              <span className="bk-dentist-badges">
+                <span className="bk-pill sel"><Icon name="check" size={12} /> Selected</span>
+                <button type="button" className="bk-change" onClick={unlockDoctor}>Change doctor</button>
+              </span>
+            </div>
+          ) : !service ? (
+            <p className="bk-empty">Select a service to view available dentists.</p>
+          ) : dentists.length === 0 ? (
+            <p className="muted">No doctors are available right now.</p>
+          ) : (
+            <div className="bk-dentists" role="radiogroup" aria-label="Choose a dentist">
               {dentists.map((option) => {
                 const eligible = dentistOffersService(option, service)
                 const selected = String(option.id) === String(dentistId)
@@ -182,54 +279,70 @@ export default function Book() {
                     aria-disabled={!eligible}
                     tabIndex={selected || (!dentistId && eligible) ? 0 : -1}
                     data-dentist-id={option.id}
-                    className={`dentist-option${selected ? ' selected' : ''}${!eligible ? ' ineligible' : ''}`}
+                    title={!eligible ? doctorReason() : undefined}
+                    className={`bk-dentist${selected ? ' selected' : ''}${!eligible ? ' ineligible' : ''}`}
                     onClick={() => chooseDentist(option)}
                     onKeyDown={(event) => handleDentistKeyDown(event, option.id)}
                   >
-                    <span className="dentist-option-indicator" aria-hidden="true" />
-                    <span className="dentist-option-content">
+                    <DentistAvatar name={option.name} />
+                    <span className="bk-dentist-body">
                       <b>{option.name}</b>
-                      <span className="dentist-option-specialty">{option.specialty}</span>
-                      {!eligible && <span className="dentist-option-reason">{doctorReason(option)}</span>}
+                      <span className="bk-dentist-spec">{option.specialty}</span>
                     </span>
-                    {!eligible && <span className="dentist-option-status">Unavailable for this service</span>}
+                    <span className="bk-dentist-badges">
+                      {selected
+                        ? <span className="bk-pill sel"><Icon name="check" size={12} /> Selected</span>
+                        : <span className={`bk-pill ${eligible ? 'ok' : 'off'}`}>{eligible ? 'Available' : 'Unavailable'}</span>}
+                    </span>
                   </button>
                 )
               })}
             </div>
           )}
-        </fieldset>
-        <h3>3. Date and time</h3>
-        {dentistId ? <SlotPicker dentistId={dentistId} dentistWorkDays={dentist?.work_days} date={date} setDate={setDate} time={time} setTime={setTime} refreshKey={slotRefresh} />
-                   : <p className="muted">Pick a dentist first to see the schedule.</p>}
-        {needsPhone && (
-          <label>Mobile number (for SMS reminders)
-            <input
-              type="tel"
-              name="phone"
-              inputMode="numeric"
-              autoComplete="tel"
-              maxLength={11}
-              placeholder="09XXXXXXXXX"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
-              aria-invalid={phone !== '' && !phoneOk}
-            />
+        </section>
+
+        <section className="bk-section" aria-labelledby="bk-h-date">
+          <h2 id="bk-h-date" className="bk-h bk-h-spaced"><span className="bk-num">03</span> — Select Date &amp; Time</h2>
+          {dentistId ? (
+            <SlotPicker dentistId={dentistId} dentistWorkDays={dentist?.work_days} date={date} setDate={setDate} time={time} setTime={setTime} refreshKey={slotRefresh} />
+          ) : (
+            <div className="bk-empty-box">
+              <Icon name="calendar" size={26} />
+              <p>Available schedules will appear here.</p>
+              <small>Choose a dentist first to view available schedules.</small>
+            </div>
+          )}
+        </section>
+
+        <section className="bk-consent-section" aria-labelledby="bk-h-consent">
+          <h2 id="bk-h-consent" className="bk-consent-title"><Icon name="shield" size={18} /> Appointment Consent</h2>
+          {needsPhone && (
+            <label>Mobile number (for SMS reminders)
+              <input
+                type="tel"
+                name="phone"
+                inputMode="numeric"
+                autoComplete="tel"
+                maxLength={11}
+                placeholder="09XXXXXXXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                aria-invalid={phone !== '' && !phoneOk}
+              />
+            </label>
+          )}
+          <label className="consent-check">
+            <input type="checkbox" name="consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <span>
+              I agree to the SmileBook{' '}
+              <button type="button" className="consent-link" onClick={() => setShowPrivacy(true)}>Privacy Notice</button>
+              {' '}and consent to receive {clinicInfo.smsEnabled ? 'SMS and email messages' : 'email messages'} about my appointment (confirmations, reminders and changes).
+              {clinicInfo.smsEnabled && ' Message and data rates may apply.'} To stop receiving messages, contact the clinic at {clinicInfo.email}.
+            </span>
           </label>
-        )}
-        <label className="consent-check">
-          <input type="checkbox" name="consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          <span>
-            I agree to the SmileBook{' '}
-            <button type="button" className="consent-link" onClick={() => setShowPrivacy(true)}>Privacy Notice</button>
-            {' '}and consent to receive {clinicInfo.smsEnabled ? 'SMS and email messages' : 'email messages'} about my appointment (confirmations, reminders and changes).
-            {clinicInfo.smsEnabled && ' Message and data rates may apply.'} To stop receiving messages, contact the clinic at {clinicInfo.email}.
-          </span>
-        </label>
-        <div className="form-actions">
-          <button className="btn" disabled={!ready || !consent || busy || (needsPhone && !phoneOk)} onClick={goToPayment}>Continue to down payment</button>
-        </div>
-        {ready && !consent && <p className="muted consent-hint"><small>Please tick the box above to continue.</small></p>}
+          <button className="btn bk-continue" disabled={!ready || !consent || busy || (needsPhone && !phoneOk)} onClick={goToPayment}>Continue to Down Payment →</button>
+          {ready && !consent && <p className="muted consent-hint"><small>Please tick the box above to continue.</small></p>}
+        </section>
       </div>
 
       <AppointmentPolicies />
