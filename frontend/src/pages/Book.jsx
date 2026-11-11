@@ -350,7 +350,7 @@ export default function Book() {
               {clinicInfo.smsEnabled && ' Message and data rates may apply.'} To stop receiving messages, contact the clinic at {clinicInfo.email}.
             </span>
           </label>
-          <button className="btn bk-continue" disabled={!ready || !consent || busy || (needsPhone && !phoneOk)} onClick={goToPayment}>Continue to Down Payment →</button>
+          <button className="btn bk-continue" disabled={!ready || !consent || busy || (needsPhone && !phoneOk)} onClick={goToPayment}>Continue to Down Payment</button>
           {ready && !consent && <p className="muted consent-hint"><small>Please tick the box above to continue.</small></p>}
         </section>
 
