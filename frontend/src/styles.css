@@ -239,7 +239,8 @@ input, select, textarea {
   transition: border-color var(--transition-ui), box-shadow var(--transition-ui), background-color var(--transition-ui);
 }
 
-input::placeholder, textarea::placeholder { color: #788b8a; opacity: 1; }
+/* Placeholder: darker than before (#788b8a was 3.6:1 on white; this is about 5:1) but still lighter than typed text */
+input::placeholder, textarea::placeholder { color: var(--color-muted); opacity: 1; }
 input:hover, select:hover, textarea:hover { border-color: #a8c2be; }
 input:focus, select:focus, textarea:focus { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 4px rgba(8, 127, 120, .13); }
 input[aria-invalid="true"] { border-color: var(--color-error); }
