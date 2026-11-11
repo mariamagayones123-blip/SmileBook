@@ -3,7 +3,7 @@
 // To add or replace a case:
 //   1. Put your two photos in frontend/public/before-after/ (jpg, png, webp or svg)
 //   2. Point `before` and `after` to them below
-//   3. Set `sample: false` once the photos are real, so the "Sample" badge disappears
+//   3. Set `sample: false` once the photos are real, so the "Illustration" badge disappears
 //
 // `service` must match a service name in your Services list so the
 // "Book this service" button can preselect it, and `category` must match

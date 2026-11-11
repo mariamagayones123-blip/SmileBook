@@ -16,14 +16,14 @@ function CaseCard({ item, service }) {
             key={which}
             className={`ba-img${side === which ? ' is-active' : ''}`}
             src={item[which]}
-            alt={side === which ? `${item.service}: ${which} treatment${item.sample ? ' (sample image)' : ''}` : ''}
+            alt={side === which ? `${item.service}: ${which} treatment${item.sample ? ' (illustration)' : ''}` : ''}
             aria-hidden={side !== which}
             loading="lazy"
             draggable="false"
           />
         ))}
         <span className="ba-label" aria-live="polite">{side}</span>
-        {item.sample && <span className="ba-sample">Sample</span>}
+        {item.sample && <span className="ba-sample">Illustration</span>}
       </div>
       <div className="ba-body">
         <div className="ba-dots" role="group" aria-label={`${item.service} photo view`}>
