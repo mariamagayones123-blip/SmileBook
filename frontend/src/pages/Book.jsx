@@ -39,6 +39,7 @@ export default function Book() {
   const [serviceId, setServiceId] = useState(params.get('service') || '')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
+  const [timeEnd, setTimeEnd] = useState('') // end of the chosen slot, shown as "9:00 AM – 10:00 AM"
   const [selectionHint, setSelectionHint] = useState('')
   const [showPay, setShowPay] = useState(false)
   const [consent, setConsent] = useState(false)
@@ -304,7 +305,7 @@ export default function Book() {
         <section className="bk-section" aria-labelledby="bk-h-date">
           <h2 id="bk-h-date" className="bk-h bk-h-spaced"><span className="bk-num">03</span> — Select Date &amp; Time</h2>
           {dentistId ? (
-            <SlotPicker dentistId={dentistId} dentistWorkDays={dentist?.work_days} date={date} setDate={setDate} time={time} setTime={setTime} refreshKey={slotRefresh} />
+            <SlotPicker dentistId={dentistId} dentistWorkDays={dentist?.work_days} date={date} setDate={setDate} time={time} setTime={setTime} setTimeEnd={setTimeEnd} refreshKey={slotRefresh} />
           ) : (
             <div className="bk-empty-box">
               <Icon name="calendar" size={26} />
@@ -348,17 +349,40 @@ export default function Book() {
       <AppointmentPolicies />
 
       {showPay && DEMO && (
-        <Modal onClose={() => setShowPay(false)} titleId="payment-modal-title" descriptionId="payment-modal-description">
-            <h2 id="payment-modal-title">Down Payment</h2>
-            <p id="payment-modal-description" className="payment-demo-notice">Demo only: no real payment will be taken. Confirming creates a sample booking with a ₱{DOWN_PAYMENT} demo down payment.</p>
-            <div className="qr"><QRCodeSVG value={`SMILEBOOK-DEMO|${demoRef}|PHP${DOWN_PAYMENT}`} size={170} /></div>
-            <p className="center"><b>Ref: {demoRef}</b></p>
-            <ul className="summary">
-              <li>{dentist?.name}</li><li>{service?.name}</li>
-              <li>{formatDate(date)} at {time && to12h(time)}</li>
-            </ul>
-            <button className="btn" disabled={busy} onClick={confirmBooking}>{busy ? 'Booking...' : 'Confirm demo booking'}</button>
+        <Modal className="card narrow pay-modal" onClose={() => setShowPay(false)} titleId="payment-modal-title" descriptionId="payment-modal-description">
+          <div className="pay-scroll">
+            <div className="pay-head">
+              <h2 id="payment-modal-title">Complete Your Booking</h2>
+              <span className="bk-step-pill">Step 3 of 3</span>
+            </div>
+            <div className="bk-progress" aria-hidden="true"><span className="on" /><span className="on" /><span className="on" /></div>
+
+            <h3 className="pay-sub">Down Payment</h3>
+            <p id="payment-modal-description" className="payment-demo-notice">This is a demonstration only. No real payment will be processed. Confirming creates a sample booking.</p>
+
+            <div className="pay-qr-card">
+              <div className="pay-qr"><QRCodeSVG value={`SMILEBOOK-DEMO|${demoRef}|PHP${DOWN_PAYMENT}`} size={104} /></div>
+              <span className="pay-qr-label">Demo QR Code</span>
+              <p className="pay-amount">₱{Number(DOWN_PAYMENT).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              <p className="pay-amount-label">Demo Down Payment</p>
+              <p className="pay-ref">Reference: {demoRef}</p>
+            </div>
+
+            <h3 className="pay-sub">Appointment Summary</h3>
+            <dl className="pay-summary">
+              <div><dt>Dentist</dt><dd>{dentist?.name}</dd></div>
+              <div><dt>Service</dt><dd>{service?.name}</dd></div>
+              <div><dt>Date</dt><dd>{formatDate(date)}</dd></div>
+              <div><dt>Time</dt><dd>{time && (timeEnd ? `${to12h(time)} – ${to12h(timeEnd)}` : to12h(time))}</dd></div>
+            </dl>
+            <div className="pay-total">
+              <span>Amount to Pay</span>
+              <b>₱{Number(DOWN_PAYMENT).toLocaleString('en-US', { minimumFractionDigits: 2 })}</b>
+            </div>
+
+            <button className="btn pay-confirm" disabled={busy} onClick={confirmBooking}>{busy ? 'Booking...' : 'Confirm Demo Booking'}</button>
             <button className="btn ghost" onClick={() => setShowPay(false)}>Cancel</button>
+          </div>
         </Modal>
       )}
       {showPay && !DEMO && (
@@ -379,7 +403,7 @@ export default function Book() {
             </dl>
             <ul className="summary">
               <li>{dentist?.name}</li><li>{service?.name}</li>
-              <li>{formatDate(date)} at {time && to12h(time)}</li>
+              <li>{formatDate(date)} at {time && (timeEnd ? `${to12h(time)} – ${to12h(timeEnd)}` : to12h(time))}</li>
             </ul>
             <label>{clinicInfo.payment.method} reference number
               <input
