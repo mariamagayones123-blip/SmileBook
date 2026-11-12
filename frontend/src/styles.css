@@ -1386,3 +1386,50 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(178, 59, 54, .15);
   /* keep headings clear of the sticky nav when the page scrolls to them */
   .bk-h { scroll-margin-top: 96px; }
 }
+
+/* Admin appointments: show-more button */
+.show-more { display: block; width: auto; margin: 14px auto 0; }
+
+/* "Waking up the server" notice (see ServerWaking.jsx) */
+.server-waking { position: fixed; left: 50%; bottom: 20px; z-index: 1000; display: flex; align-items: center; gap: 12px; width: min(92vw, 460px); padding: 12px 16px; transform: translateX(-50%); border: 1px solid var(--color-border); border-left: 4px solid var(--color-primary); border-radius: 14px; background: var(--color-surface); box-shadow: var(--shadow-card); font-size: .9rem; }
+.server-waking p { margin: 0; }
+.server-waking-dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--color-primary); animation: server-pulse 1.2s ease-in-out infinite; }
+@keyframes server-pulse { 0%, 100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .server-waking-dot { animation: none; } }
+
+/* ===== Admin mobile polish: scroll hints + card spacing (design unchanged) ===== */
+@media (max-width: 700px) {
+  /* Soft edge shadow shows only on the side that still has hidden tabs/chips (no JS needed) */
+  .tabs {
+    padding-inline: 5px;
+    background:
+      linear-gradient(to right, var(--color-surface) 30%, rgba(255, 255, 255, 0)) 0 0 / 32px 100% no-repeat local,
+      linear-gradient(to left, var(--color-surface) 30%, rgba(255, 255, 255, 0)) 100% 0 / 32px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, rgba(16, 63, 66, .22), rgba(16, 63, 66, 0)) 0 0 / 12px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(16, 63, 66, .22), rgba(16, 63, 66, 0)) 100% 0 / 12px 100% no-repeat scroll,
+      var(--color-surface);
+  }
+  /* Chips: soft fade on the right edge (same trick as the landing page tabs); padding lets the last chip clear it */
+  .chips {
+    padding-right: 28px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+}
+
+/* Appointment cards: divider under the patient, and one above the buttons */
+@media (max-width: 900px) {
+  .appt-table td:nth-child(2) { margin-top: 2px; padding-top: 14px; border-top: 1px solid var(--color-border-light); }
+  .appt-table td:last-child { margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--color-border-light); }
+  .appt-table tr { padding-top: 16px; padding-bottom: 16px; }
+}
+
+/* Cancelled / done cards have no buttons: hide the empty actions row so no stray divider or gap shows */
+@media (max-width: 900px) {
+  .appt-table td:last-child:has(> .row-actions:empty) { display: none; }
+}
+
+/* Loading / empty-state row is not a card: no divider */
+@media (max-width: 900px) {
+  .appt-table td.center, .appt-table td.center:last-child { margin-top: 0; padding-top: 6px; border-top: 0; }
+}

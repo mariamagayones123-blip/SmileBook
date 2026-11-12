@@ -17,6 +17,8 @@ const fmtDate = (ymd) => {
   const [y, m, d] = ymd.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
+const PAGE_SIZE = 25 // appointments shown at a time in the admin list
+
 const initials = (name = '') => name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
 
 const TABS = [
@@ -91,8 +93,11 @@ function Appointments() {
   const [modalErr, setModalErr] = useState('')
   const [filter, setFilter] = useState('all')
   const [q, setQ] = useState('')
+  const [cancelTarget, setCancelTarget] = useState(null) // appointment waiting for "are you sure?"
+  const [visible, setVisible] = useState(PAGE_SIZE)
+  // "loading" starts true, so only the very first load shows the loading row.
+  // Reloading after Approve / Cancel keeps the table on screen instead of flashing it.
   const load = async () => {
-    setLoading(true)
     try {
       const { data } = await api.get('/appointments')
       setList(data)
@@ -103,6 +108,7 @@ function Appointments() {
     }
   }
   useEffect(() => { load() }, [])
+  useEffect(() => { setVisible(PAGE_SIZE) }, [filter, q]) // new filter -> back to the first page
 
   const setStatus = async (id, status) => {
     setActionBusyId(id)
@@ -123,10 +129,18 @@ function Appointments() {
     finally { setSaving(false) }
   }
 
-  const counts = list.reduce((acc, a) => ({ ...acc, [a.status]: (acc[a.status] || 0) + 1 }), { all: list.length })
+  const today = todayYmd()
+  const inScope = list
+  // The status chip numbers follow the date view, so "pending 3" matches the rows you can see.
+  const counts = inScope.reduce((acc, a) => ({ ...acc, [a.status]: (acc[a.status] || 0) + 1 }), { all: inScope.length })
   const term = q.trim().toLowerCase()
-  const shown = list.filter((a) => (filter === 'all' || a.status === filter)
+  const matches = inScope.filter((a) => (filter === 'all' || a.status === filter)
     && (!term || [a.user.name, a.dentist.name, a.service.name, a.payment_ref].some((v) => String(v || '').toLowerCase().includes(term))))
+  // Newest first.
+  const stamp = (a) => `${a.date} ${a.start_time}`
+  const sorted = [...matches].sort((a, b) => stamp(b).localeCompare(stamp(a)))
+  const shown = sorted.slice(0, visible)
+  const hiddenCount = sorted.length - shown.length
 
   return (
     <>
@@ -181,7 +195,7 @@ function Appointments() {
                     })()}
                     {a.status !== 'cancelled' && a.status !== 'done' && <>
                       <button className="btn small ghost" disabled={actionBusyId !== null} onClick={() => { setEditing(a); setDate(''); setTime(''); setModalErr('') }}>Reschedule</button>
-                      <button className="btn small danger-soft" disabled={actionBusyId !== null} onClick={() => setStatus(a.id, 'cancelled')}>
+                      <button className="btn small danger-soft" disabled={actionBusyId !== null} onClick={() => setCancelTarget(a)}>
                         {actionBusyId === a.id ? 'Saving...' : 'Cancel'}
                       </button>
                     </>}
@@ -192,6 +206,22 @@ function Appointments() {
           </tbody>
         </table>
       </div>
+      {hiddenCount > 0 && (
+        <button type="button" className="btn ghost show-more" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+          Show {Math.min(hiddenCount, PAGE_SIZE)} more ({hiddenCount} left)
+        </button>
+      )}
+      {cancelTarget && (
+        <ConfirmModal
+          title="Cancel this appointment?"
+          message={`${cancelTarget.user.name} · ${cancelTarget.service.name} on ${fmtDate(cancelTarget.date)} at ${to12h(cancelTarget.start_time)}. The patient will be notified.`}
+          confirmLabel="Yes, cancel it"
+          cancelLabel="Keep"
+          busyLabel="Cancelling..."
+          onConfirm={() => setStatus(cancelTarget.id, 'cancelled')}
+          onClose={() => setCancelTarget(null)}
+        />
+      )}
       {editing && (
         <Modal onClose={() => setEditing(null)} titleId="admin-reschedule-modal-title">
           <h2 id="admin-reschedule-modal-title">Reschedule</h2>
@@ -219,8 +249,7 @@ function Services() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const formRef = useRef(null)
   const nameRef = useRef(null)
-  const load = async () => {
-    setLoading(true)
+  const load = async () => { // "loading" starts true; reloads after save/delete do not flash the list
     try {
       const { data } = await api.get('/services')
       setList(data)
