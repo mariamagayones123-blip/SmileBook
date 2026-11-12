@@ -5,6 +5,7 @@ use App\Models\PasswordResetOtp;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
@@ -14,8 +15,9 @@ class AuthSecurityTest extends TestCase
 
     private function user(): User
     {
-        return User::create(['name' => 'Pat Ient', 'email' => 'p@gmail.com', 'phone' => '09171234567',
-                             'password' => 'Secret1!', 'role' => 'patient']);
+        // forceCreate: email_verified_at is not mass-assignable. This is an already-verified patient.
+        return User::forceCreate(['name' => 'Pat Ient', 'email' => 'p@gmail.com', 'phone' => '09171234567',
+                             'password' => 'Secret1!', 'role' => 'patient', 'email_verified_at' => now()]);
     }
 
     private function otp(string $code = '123456'): PasswordResetOtp
@@ -130,8 +132,9 @@ class AuthSecurityTest extends TestCase
 
     public function test_register_saves_email_in_lowercase_and_blocks_the_same_email_in_other_case(): void
     {
-        $this->postJson('/api/register', $this->registerPayload('Juan@Gmail.com'))->assertOk();
+        $this->postJson('/api/register', $this->registerPayload('Juan@Gmail.com'))->assertCreated();
         $this->assertSame('juan@gmail.com', User::first()->email);
+        User::first()->forceFill(['email_verified_at' => now()])->save();   // once verified, the address is taken
 
         $this->postJson('/api/register', $this->registerPayload('JUAN@gmail.com'))
             ->assertStatus(422)->assertJsonValidationErrors('email');
@@ -178,5 +181,42 @@ class AuthSecurityTest extends TestCase
             'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'POST',
         ]);
         $this->assertNull($bad->headers->get('Access-Control-Allow-Origin'));
+    }
+
+    // ---------- Google link must not keep an old (possibly attacker-made) password ----------
+
+    private function fakeGoogle(string $sub = 'g-123', string $email = 'p@gmail.com'): void
+    {
+        config(['services.google.client_id' => 'test-client']);
+        Http::fake([
+            'oauth2.googleapis.com/*' => Http::response(['aud' => 'test-client']),
+            'www.googleapis.com/*'    => Http::response(['sub' => $sub, 'email' => $email, 'email_verified' => true, 'name' => 'Pat Ient']),
+        ]);
+    }
+
+    public function test_google_login_on_an_existing_email_account_removes_its_password_and_old_sessions(): void
+    {
+        $user = $this->user();                       // made with email + password (could be someone else's sign-up)
+        $user->createToken('old');
+        $this->fakeGoogle();
+
+        $this->postJson('/api/auth/google', ['access_token' => 'abc'])->assertOk()->assertJsonStructure(['token']);
+
+        $user->refresh();
+        $this->assertSame('g-123', $user->google_id);
+        $this->assertNull($user->password);
+        $this->assertSame(1, $user->tokens()->count());   // only the new Google session is left
+        $this->postJson('/api/login', ['email' => 'p@gmail.com', 'password' => 'Secret1!'])->assertStatus(422);
+    }
+
+    public function test_returning_google_user_keeps_their_other_sessions(): void
+    {
+        $user = User::create(['name' => 'Pat Ient', 'email' => 'p@gmail.com', 'role' => 'patient', 'google_id' => 'g-123']);
+        $user->createToken('phone');
+        $this->fakeGoogle();
+
+        $this->postJson('/api/auth/google', ['access_token' => 'abc'])->assertOk();
+
+        $this->assertSame(2, $user->tokens()->count());
     }
 }

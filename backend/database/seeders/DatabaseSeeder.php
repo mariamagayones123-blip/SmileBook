@@ -33,12 +33,13 @@ class DatabaseSeeder extends Seeder
             $adminPassword = $adminPassword ?: 'admin123';
         }
 
-        User::create(['name' => 'Clinic Admin', 'email' => $adminEmail, 'phone' => env('ADMIN_PHONE', '09170000000'),
-                      'password' => $adminPassword, 'role' => 'admin']);
+        // forceCreate: email_verified_at is deliberately not mass-assignable, so sign-up forms can never set it.
+        User::forceCreate(['name' => 'Clinic Admin', 'email' => $adminEmail, 'phone' => env('ADMIN_PHONE', '09170000000'),
+                      'password' => $adminPassword, 'role' => 'admin', 'email_verified_at' => now()]);
 
         if ($demo) {
-            User::create(['name' => 'Demo Patient', 'email' => 'patient@smilebook.test', 'phone' => '09171234567',
-                          'password' => 'patient123', 'role' => 'patient']);
+            User::forceCreate(['name' => 'Demo Patient', 'email' => 'patient@smilebook.test', 'phone' => '09171234567',
+                          'password' => 'patient123', 'role' => 'patient', 'email_verified_at' => now()]);
         }
 
         // Clinic hours: Mon-Fri 7:30 AM - 6:00 PM, Saturday 7:30 AM - 12 NN (Saturday cap is applied in Dentist::slotsFor)

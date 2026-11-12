@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Jobs\SendAppointmentNotification;
 use App\Models\Dentist;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class AppointmentController extends Controller
 {
     const DOWN_PAYMENT = 200;   // PHP. Keep the same as clinicInfo.payment.amount in the frontend
     const MIN_DAYS_AHEAD = 2;   // teacher's rule: book at least 2 days before
+    const MAX_ACTIVE_BOOKINGS = 3; // upcoming appointments (pending or approved) one patient can hold at a time
 
     public function index(Request $r)
     {
@@ -58,6 +60,7 @@ class AppointmentController extends Controller
 
         try {
             $appt = DB::transaction(function () use ($r, $data, $slot) {
+                $this->assertUnderBookingLimit($r->user());
                 $this->assertFree($data['dentist_id'], $data['date'], $data['start_time']);
                 return Appointment::create([
                     'user_id'      => $r->user()->id,
@@ -214,6 +217,28 @@ class AppointmentController extends Controller
             ->lockForUpdate()->exists();
         if ($taken) {
             throw $this->slotTakenError();
+        }
+    }
+
+    /** One patient cannot hold more than MAX_ACTIVE_BOOKINGS upcoming appointments (stops slot hoarding). Admins are not limited. */
+    private function assertUnderBookingLimit(User $user): void
+    {
+        if ($user->role === 'admin') {
+            return;
+        }
+        // Lock this patient's row so two requests sent at the same moment cannot both slip under the limit.
+        User::whereKey($user->id)->lockForUpdate()->first();
+
+        $active = Appointment::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereDate('date', '>=', Carbon::today()->toDateString())
+            ->count();
+
+        if ($active >= self::MAX_ACTIVE_BOOKINGS) {
+            throw ValidationException::withMessages([
+                'limit' => 'You already have ' . self::MAX_ACTIVE_BOOKINGS . ' upcoming appointments. '
+                    . 'Please wait until one is done, or cancel one, before booking another.',
+            ]);
         }
     }
 

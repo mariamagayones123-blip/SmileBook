@@ -206,4 +206,35 @@ class AppointmentBookingTest extends TestCase
         $this->assertIsArray($this->service->toArray());
         $this->getJson('/api/services')->assertOk();
     }
+
+    // ---------- booking limit per patient ----------
+
+    public function test_a_patient_cannot_hold_more_than_three_upcoming_appointments(): void
+    {
+        $u = $this->patient();
+        $this->book($u, '09:00')->assertCreated();
+        $this->book($u, '10:00')->assertCreated();
+        $this->book($u, '11:00')->assertCreated();
+        $this->book($u, '12:00')->assertStatus(422)->assertJsonValidationErrors('limit');
+        $this->assertSame(3, Appointment::count());
+    }
+
+    public function test_cancelled_and_done_appointments_do_not_count_toward_the_limit(): void
+    {
+        $u = $this->patient();
+        $this->raw($u, 'cancelled', '09:00');
+        $this->raw($u, 'done', '10:00');
+        $this->raw($u, 'pending', '11:00');
+        $this->raw($u, 'approved', '12:00');
+        $this->book($u, '13:00')->assertCreated();   // 2 active + this one = 3
+    }
+
+    public function test_the_limit_is_per_patient(): void
+    {
+        $a = $this->patient('a@test.com');
+        $this->raw($a, 'pending', '09:00');
+        $this->raw($a, 'pending', '10:00');
+        $this->raw($a, 'pending', '11:00');
+        $this->book($this->patient('b@test.com'), '12:00')->assertCreated();
+    }
 }

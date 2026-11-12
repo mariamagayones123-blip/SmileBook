@@ -63,7 +63,7 @@ php artisan test
 Check the frontend builds with `npm run build` in `frontend`.
 
 ## Email
-- Default (`MAIL_MAILER=log`): emails are written to `backend/storage/logs/laravel.log`. This includes the 6-digit code for "Forgot password", so you can test without Gmail.
+- Default (`MAIL_MAILER=log`): emails are written to `backend/storage/logs/laravel.log`. This includes the 6-digit codes for sign-up ("Verify your email") and "Forgot password", so you can test without Gmail.
 - Real emails with Gmail: turn on 2-Step Verification, create a 16-character **App Password**, then in `backend/.env` set:
   ```
   MAIL_MAILER=smtp
@@ -76,6 +76,7 @@ Check the frontend builds with `npm run build` in `frontend`.
   Then run `php artisan config:clear`.
 - **Deployed site (Render):** Render's free tier blocks SMTP, so Gmail SMTP will not work there. Use the Gmail mail relay instead (see "Email on Render" below).
 - Sign-up and Forgot password accept Gmail addresses only (for example `juan@gmail.com`).
+- **Sign-up needs email verification.** After signing up, the patient types a 6-digit code sent to their Gmail before the account can log in or book. A wrong password never reveals whether an account is unverified. Google sign-in and finishing "Forgot password" also count as verified. The migration `mark_existing_users_email_verified` marks accounts that existed before this rule as verified so nobody is locked out; the admin and demo accounts created by the seeder are verified too.
 - The "Contact us" form saves the message and emails it to `CONTACT_RECEIVER_EMAIL` (default `smilebook4dental@gmail.com`).
 
 ## Supabase (PostgreSQL) instead of SQLite

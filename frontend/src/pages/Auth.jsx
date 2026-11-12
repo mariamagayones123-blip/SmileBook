@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api, { errMsg } from '../api'
 import { useAuth } from '../authContext'
+import OtpInput from '../OtpInput'
 import { PASSWORD_RULES } from '../passwordRules'
 import clinicInfo from '../clinicInfo'
 import { useToast } from '../Toast'
@@ -154,6 +155,68 @@ export function PasswordChecklist({ id = 'password-hint', value, touched = false
   )
 }
 
+// Step shown after sign-up (and after a login with an unverified email): type the 6-digit code from the Gmail inbox.
+function VerifyEmailStep({ email, info, onVerified, onBack }) {
+  const [otp, setOtp] = useState('')
+  const [err, setErr] = useState('')
+  const [note, setNote] = useState(info || '')
+  const [busy, setBusy] = useState(false)
+  const [wait, setWait] = useState(60) // a code was just sent, so "Resend" unlocks after a minute
+
+  useEffect(() => {
+    if (wait <= 0) return undefined
+    const t = setTimeout(() => setWait((w) => w - 1), 1000)
+    return () => clearTimeout(t)
+  }, [wait])
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (otp.length !== 6) { setErr('Please enter the 6-digit code we sent to your email.'); return }
+    setErr(''); setBusy(true)
+    try {
+      const { data } = await api.post('/verify-email', { email, otp })
+      onVerified(data) // logs the person in
+    } catch (x) {
+      setErr(errMsg(x))
+      setOtp('')
+      setBusy(false)
+    }
+  }
+
+  const resend = async () => {
+    setErr(''); setBusy(true)
+    try {
+      const { data } = await api.post('/resend-verification', { email })
+      setNote(data.message)
+      setWait(60)
+    } catch (x) {
+      setErr(errMsg(x))
+    }
+    setBusy(false)
+  }
+
+  return (
+    <AuthShell>
+      <form className="auth-card" onSubmit={submit}>
+        <span className="eyebrow">One last step</span>
+        <h2>Verify your email</h2>
+        <p className="auth-lead">Enter the 6-digit code we sent to <strong>{email}</strong>. It expires in 10 minutes.</p>
+        {err && <p className="error" role="alert">{err}</p>}
+        {note && !err && <p className="auth-info" role="status">{note}</p>}
+        <div className="otp-field">
+          <span className="otp-label" id="verify-otp-label">6-digit code</span>
+          <OtpInput value={otp} onChange={setOtp} autoFocus disabled={busy} />
+        </div>
+        <button className="btn" disabled={busy}>{busy ? 'Please wait...' : 'Verify email'}</button>
+        <button type="button" className="btn ghost auth-secondary" disabled={busy || wait > 0} onClick={resend}>
+          {wait > 0 ? `Resend code in ${wait}s` : 'Resend code'}
+        </button>
+        <p className="muted">Wrong email? <button type="button" className="auth-linklike" onClick={onBack}>Go back</button></p>
+      </form>
+    </AuthShell>
+  )
+}
+
 // Sign-up needs a complete Gmail address (example: juan@gmail.com)
 const GMAIL_RE = /^[A-Za-z0-9._%+-]+@gmail\.com$/i
 
@@ -164,6 +227,7 @@ export default function Auth({ mode }) {
   const [f, setF] = useState({ name: '', email: '', phone: '', password: '', password_confirmation: '' })
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
+  const [pending, setPending] = useState(null) // { email, info } while the person still has to enter the emailed code
   const [fieldErr, setFieldErr] = useState({ name: '', phone: '', password: '', confirm: '' })
   const [touched, setTouched] = useState({ name: false, phone: false, password: false, confirm: false })
 
@@ -290,8 +354,19 @@ export default function Auth({ mode }) {
     setErr(''); setBusy(true)
     try {
       const { data } = await api.post(isReg ? '/register' : '/login', { ...f, email: f.email.trim().toLowerCase() })
+      if (data.needs_verification) { // sign-up done, but the email must be confirmed before logging in
+        setPending({ email: data.email, info: data.message })
+        setBusy(false)
+        return
+      }
       login(data)
     } catch (x) {
+      if (x.response?.status === 403 && x.response.data?.needs_verification) {
+        // right password, but this email was never verified: the server just emailed a new code
+        setPending({ email: x.response.data.email, info: x.response.data.message })
+        setBusy(false)
+        return
+      }
       // The server validates too: show its messages next to the matching fields.
       const errors = x.response?.data?.errors
       if (isReg && errors) {
@@ -308,12 +383,16 @@ export default function Auth({ mode }) {
     setBusy(false)
   }
 
+  if (pending) {
+    return <VerifyEmailStep email={pending.email} info={pending.info} onVerified={login} onBack={() => setPending(null)} />
+  }
+
   return (
     <AuthShell>
       <form className="auth-card" onSubmit={submit} noValidate={isReg}>
         <span className="eyebrow">{isReg ? 'Join SmileBook' : 'Welcome back'}</span>
         <h2>{isReg ? 'Create your account' : 'Log in to continue'}</h2>
-        <p className="auth-lead">{isReg ? 'Set up your patient profile to book care with our clinic team.' : 'Use the email and password for your SmileBook account.'}</p>
+        <p className="auth-lead">{isReg ? 'Set up your patient profile to book care with our clinic team. We will email a 6-digit code to confirm your Gmail.' : 'Use the email and password for your SmileBook account.'}</p>
         {err && <p className="error">{err}</p>}
         {isReg && (<>
           <label>Full name
