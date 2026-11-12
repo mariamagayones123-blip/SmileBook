@@ -19,6 +19,8 @@ const clinicInfo = {
     amount: 200,
     qrImage: '',
   },
+  // Fallback only. The Contact section builds the real hours from the dentists' schedules (Admin > Schedules),
+  // so this text is shown just while they load. Keep it equal to the real clinic hours.
   hours: 'Monday - Friday: 7:00 AM - 6:00 PM, Saturday: 7:00 AM - 12:00 NN',
   googleMapsUrl: 'https://maps.app.goo.gl/KzVKeCsMZcVdWYaS9',
   googleMapsPlaceholder: 'https://maps.app.goo.gl/KzVKeCsMZcVdWYaS9 — Add the clinic Google Maps link',

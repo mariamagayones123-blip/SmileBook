@@ -186,16 +186,16 @@ class AppointmentBookingTest extends TestCase
     public function test_saturday_slots_stop_at_noon_but_weekdays_run_to_the_end_time(): void
     {
         $dentist = Dentist::create([
-            'name' => 'Dr. Clinic', 'specialty' => 'General', 'start_time' => '07:30', 'end_time' => '18:00',
+            'name' => 'Dr. Clinic', 'specialty' => 'General', 'start_time' => '07:00', 'end_time' => '18:00',
             'slot_minutes' => 60, 'work_days' => [1, 2, 3, 4, 5, 6],
         ]);
 
         $saturday = $dentist->slotsFor(Carbon::parse('next saturday')->toDateString());
-        $this->assertSame('07:30', $saturday[0]['start']);
-        $this->assertSame('11:30', end($saturday)['end']);
+        $this->assertSame('07:00', $saturday[0]['start']);
+        $this->assertSame('12:00', end($saturday)['end']);
 
         $monday = $dentist->slotsFor(Carbon::parse('next monday')->toDateString());
-        $this->assertSame('17:30', end($monday)['end']);
+        $this->assertSame('18:00', end($monday)['end']);
     }
 
     public function test_dentist_loaded_with_only_the_id_column_can_still_be_serialized(): void

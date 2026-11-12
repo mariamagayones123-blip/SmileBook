@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import api, { errMsg } from '../api'
+import api, { errMsg, to12h, toClinicTime } from '../api'
 import { useAuth } from '../authContext'
 import clinicInfo from '../clinicInfo'
 import { useToast } from '../Toast'
@@ -20,12 +20,41 @@ function Icon({ name }) {
   )
 }
 
+const FULL_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+// Clinic hours built from the dentists' real schedules, so this text can never disagree with the time slots patients can book.
+// Returns null when there is nothing to build from yet (the fallback text in clinicInfo.js is used then).
+function hoursFromDentists(dentists) {
+  const list = (dentists || []).filter((d) => d.start_time && d.end_time && Array.isArray(d.work_days) && d.work_days.length)
+  if (!list.length) return null
+  const earliest = (group) => group.map((d) => d.start_time).sort()[0]
+  const latest = (group, endOf) => group.map(endOf).sort().slice(-1)[0]
+  const lines = []
+
+  const weekdays = [1, 2, 3, 4, 5].filter((n) => list.some((d) => d.work_days.includes(n)))
+  if (weekdays.length) {
+    const group = list.filter((d) => d.work_days.some((n) => n >= 1 && n <= 5))
+    const label = weekdays.length === 5 ? 'Monday - Friday' : weekdays.map((n) => FULL_DAY_NAMES[n]).join(', ')
+    lines.push(`${label}: ${to12h(earliest(group))} - ${to12h(latest(group, (d) => d.end_time))}`)
+  }
+  const saturday = list.filter((d) => d.work_days.includes(6))
+  if (saturday.length) {
+    lines.push(`Saturday: ${to12h(earliest(saturday))} - ${toClinicTime(latest(saturday, (d) => d.saturday_end_time || d.end_time))}`)
+  }
+  const sunday = list.filter((d) => d.work_days.includes(0))
+  if (sunday.length) {
+    lines.push(`Sunday: ${to12h(earliest(sunday))} - ${to12h(latest(sunday, (d) => d.end_time))}`)
+  }
+  return lines.length ? lines : null
+}
+
 const mapsQuery = encodeURIComponent(clinicInfo.address)
 const mapsEmbedUrl = `https://maps.google.com/maps?q=${mapsQuery}&z=16&output=embed`
 
-export default function ContactSection() {
+export default function ContactSection({ dentists }) {
   const { user } = useAuth()
   const { addToast } = useToast()
+  const hoursLines = hoursFromDentists(dentists) || clinicInfo.hours.split(', ')
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState('')
   const [form, setForm] = useState({
@@ -77,7 +106,7 @@ export default function ContactSection() {
           <div className="clinic-detail"><Icon name="phone" /><div><b>Contact no.</b><p><a href={`tel:${clinicInfo.phone.replace(/[^\d+]/g, '')}`}>{clinicInfo.phone}</a></p></div></div>
           <div className="clinic-detail"><Icon name="mail" /><div><b>Gmail</b><p><a href={`mailto:${clinicInfo.email}`}>{clinicInfo.email}</a></p></div></div>
           <div className="clinic-detail"><Icon name="facebook" /><div><b>Facebook</b><p><a href={clinicInfo.facebookUrl} target="_blank" rel="noreferrer">facebook.com/smilebook4dental</a></p></div></div>
-          <div className="clinic-detail"><Icon name="clock" /><div><b>Clinic hours</b><p>{clinicInfo.hours.split(', ').map((line) => <span key={line} className="hours-line">{line}</span>)}</p></div></div>
+          <div className="clinic-detail"><Icon name="clock" /><div><b>Clinic hours</b><p>{hoursLines.map((line) => <span key={line} className="hours-line">{line}</span>)}</p></div></div>
           <div className="map-frame">
             <iframe title="SmileBook Dental Clinic on Google Maps" src={mapsEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
             <a className="map-link" href={clinicInfo.googleMapsUrl} target="_blank" rel="noreferrer">Open location in Google Maps</a>

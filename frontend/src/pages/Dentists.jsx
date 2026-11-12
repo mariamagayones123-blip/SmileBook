@@ -39,7 +39,7 @@ function PlaceholderValue({ value }) {
 
 const FULL_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-// e.g. ["Monday - Friday: 7:30 AM - 6:00 PM", "Saturday: 7:30 AM - 12:00 NN"]
+// e.g. ["Monday - Friday: 7:00 AM - 6:00 PM", "Saturday: 7:00 AM - 12:00 NN"]
 function scheduleLines(dentist) {
   const days = dentist.work_days || []
   const weekdays = days.filter((day) => day >= 1 && day <= 5).sort()
@@ -217,7 +217,7 @@ export default function Dentists() {
       <BeforeAfterSection services={services} />
 
       <ReviewsSection services={services} />
-      <ContactSection />
+      <ContactSection dentists={dentists} />
 
       <footer className="site-footer">
         <div className="footer-brand">

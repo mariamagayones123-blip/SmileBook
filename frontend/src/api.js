@@ -1,18 +1,38 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api' })
+// 70 seconds: the free Render server sleeps and can take about a minute to wake up. Without a limit the page would wait forever.
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api', timeout: 70000 })
+
+// "Server is waking up" signal. If any request is still waiting after a few seconds, the app shows a notice
+// (see ServerWaking.jsx). It listens for the 'api:slow' event; detail is true while something is slow.
+const SLOW_MS = 4000
+let slowCount = 0
+const tellSlow = () => window.dispatchEvent(new CustomEvent('api:slow', { detail: slowCount > 0 }))
+const startSlowTimer = (config) => {
+  const mark = { slow: false }
+  mark.timer = setTimeout(() => { mark.slow = true; slowCount += 1; tellSlow() }, SLOW_MS)
+  config.slowMark = mark
+}
+const stopSlowTimer = (config) => {
+  const mark = config?.slowMark
+  if (!mark) return
+  clearTimeout(mark.timer)
+  if (mark.slow) { mark.slow = false; slowCount = Math.max(0, slowCount - 1); tellSlow() }
+}
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   config.headers.Accept = 'application/json'
+  startSlowTimer(config)
   return config
 })
 
 // If the server says our token is no longer valid (expired / revoked), log out cleanly.
 api.interceptors.response.use(
-  (res) => res,
+  (res) => { stopSlowTimer(res.config); return res },
   (error) => {
+    stopSlowTimer(error.config)
     const url = error.config?.url || ''
     const isAuthForm = ['/login', '/register', '/forgot-password', '/reset-password'].some((p) => url.endsWith(p))
     if (error.response?.status === 401 && !isAuthForm && localStorage.getItem('token')) {
@@ -27,7 +47,10 @@ api.interceptors.response.use(
 export const errMsg = (e) => {
   const d = e.response?.data
   if (d?.errors) return Object.values(d.errors).flat().join(' ')
-  return d?.message || 'Something went wrong. Please try again.'
+  if (d?.message) return d.message
+  if (e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT') return 'The server is taking too long to respond. Please wait a moment and try again.'
+  if (!e.response) return 'Cannot reach the server. Please check your internet connection and try again.'
+  return 'Something went wrong. Please try again.'
 }
 
 // Local date as YYYY-MM-DD (avoids the UTC shift problem)

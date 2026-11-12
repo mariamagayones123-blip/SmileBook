@@ -42,13 +42,13 @@ class DatabaseSeeder extends Seeder
                           'password' => 'patient123', 'role' => 'patient', 'email_verified_at' => now()]);
         }
 
-        // Clinic hours: Mon-Fri 7:30 AM - 6:00 PM, Saturday 7:30 AM - 12 NN (Saturday cap is applied in Dentist::slotsFor)
+        // Clinic hours: Mon-Fri 7:00 AM - 6:00 PM, Saturday 7:00 AM - 12 NN (Saturday cap is applied in Dentist::slotsFor)
         Dentist::create(['name' => 'Dr. Maria Santos', 'specialty' => 'General Dentistry',
-            'start_time' => '07:30', 'end_time' => '18:00', 'slot_minutes' => 60, 'work_days' => [1, 2, 3, 4, 5, 6]]);
+            'start_time' => '07:00', 'end_time' => '18:00', 'slot_minutes' => 60, 'work_days' => [1, 2, 3, 4, 5, 6]]);
         Dentist::create(['name' => 'Dr. Jose Reyes', 'specialty' => 'Orthodontics (Braces)',
-            'start_time' => '07:30', 'end_time' => '18:00', 'slot_minutes' => 60, 'work_days' => [1, 2, 3, 4, 5, 6]]);
+            'start_time' => '07:00', 'end_time' => '18:00', 'slot_minutes' => 60, 'work_days' => [1, 2, 3, 4, 5, 6]]);
         Dentist::create(['name' => 'Dr. Ana Cruz', 'specialty' => 'Oral Surgery',
-            'start_time' => '07:30', 'end_time' => '18:00', 'slot_minutes' => 60, 'work_days' => [1, 2, 3, 4, 5, 6]]);
+            'start_time' => '07:00', 'end_time' => '18:00', 'slot_minutes' => 60, 'work_days' => [1, 2, 3, 4, 5, 6]]);
 
         $this->call(ServiceSeeder::class);
         $this->call(DentistServiceSeeder::class);   // links each dentist to the services they offer

@@ -11,6 +11,7 @@ import DataDeletion from './pages/DataDeletion'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import { ToastProvider } from './Toast'
+import ServerWaking from './ServerWaking'
 import { AuthCtx, useAuth } from './authContext'
 
 function Guard({ children, admin }) {
@@ -98,6 +99,7 @@ export default function App() {
     <ToastProvider>
       <AuthCtx.Provider value={{ user, setUser, loading, authError, login, logout }}>
         <ScrollToTop />
+        <ServerWaking />
         <header className="nav">
           <Link to="/" className="brand" aria-label="SmileBook home">
             <svg className="brand-mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
